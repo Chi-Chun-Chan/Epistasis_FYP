@@ -110,7 +110,7 @@ class model_hill:
         return Sensor,Regulator,Output_half, Output
     @staticmethod    
     def model(params_list,I_conc): #reformulated so that output half and output are same parameters with F_o to scale
-        correct_length=13
+        correct_length=13 
         #S is subscript for parameters corresponding to Sensor
         #R is subscript for parameters corresponding to Regulator
         #H is subscript for parameters corresponding to the half network I->S -| O
@@ -271,7 +271,7 @@ class model_hill_shaky:
         H0 = B_o/(1+np.power(C_o*S0,N_o)) + A_o
         O0 = (B_o/(1+np.power(C_o*(S0+R0),N_o)))*F_o
         #arbitrary time point to integrate ODE up to
-        t = np.linspace(0,1,2)
+        t = np.linspace(0,2,2) #0,1,2
         #define system of ODEs to be solved by odeint, for a each inducer concentration
         def ODE_S(S, t, conc):
             #S for sensor concentration at time t, prod for production
@@ -340,6 +340,47 @@ def min_fun(params_list:list,data,model_type):
         result += np.power((log_stripe - log_stripe_est), 2)
         return np.sum(result)
 
+#only minimises to sensor and stripe
+# def min_fun(params_list:list,data,model_type):
+#         log_sen = np.log10(data.Sensor)
+#         log_reg = np.log10(data.Regulator)
+#         log_out = np.log10(data.Output)
+#         log_stripe = np.log10(data.Stripe)   
+#         ind = data.S
+#         Sensor_est, Regulator_est, Output_est, Stripe_est = model_type(params_list,I_conc=ind)
+#         log_sen_est = np.log10(Sensor_est)
+#         log_reg_est = np.log10(Regulator_est)
+#         log_out_est = np.log10(Output_est)
+#         log_stripe_est = np.log10(Stripe_est)
+
+#         #need to know what variables exist for each given mutant
+#         # if "Mutant_ID" in data:
+#         #     mutant_id=data.Mutant_ID[0]
+#         #     if mutant_id.startswith("Sensor"):
+#                 #need to ignore reg and output in fitting
+#         log_reg,log_reg_est,log_out,log_out_est=0,0,0,0
+#             # #if mutant_id.startswith("Regulator"):
+#             #     #need to ignore reg and output in fitting
+#             #     log_sen,log_sen_est,log_out,log_out_est=0,0,0,0
+#             # #if mutant_id.startswith("Output"):
+#             #     #need to ignore reg and sensor in fitting
+#             #     log_reg,log_reg_est,log_sen,log_sen_est=0,0,0,0
+        
+#         result = np.power((log_sen - log_sen_est), 2)
+#         result += np.power((log_reg - log_reg_est), 2)
+#         result += np.power((log_out - log_out_est), 2)
+#         result += np.power((log_stripe - log_stripe_est), 2)
+#         return np.sum(result)
+
+
+
+
+
+
+
+
+
+
 #model_hill_shakey: 
 #uses hill functions as in model_hill, but does not assume that a steady state has been reached in the system
 #example input to model_hill_shakey:
@@ -360,12 +401,12 @@ class CompDeg:
     def __init__(self,params_list:list,I_conc):
         self.params_list=params_list
         self.I_conc=I_conc
-        self.example_dict_model={"sen_params":{"A_s":1,"B_s":1,"C_s":1,"N_s":1},"reg_params":{"A_r":1,"B_r":1,"C_r":1,"N_r":1},"out_h_params":{},"out_params":{"A_o":1,"B_o":1,"C_o":1,"N_o":1,"F_o":1},"free_params":{ "K":1}}
-        self.n_parameters_2=14
+        self.example_dict_model={"sen_params":{"A_s":1,"B_s":1,"C_s":1,"N_s":1},"reg_params":{"B_r":1,"C_r":1,"N_r":1},"out_h_params":{},"out_params":{"B_o":1,"C_o":1,"N_o":1},"free_params":{"F_o":1, "K":1}}
+        self.n_parameters_2=12
 
     @staticmethod    
     def model(params_list,I_conc):             #reformulated so that output half and output are same parameters with F_o to scale
-        correct_length=14
+        correct_length=12
         #S is subscript for parameters corresponding to Sensor
         #R is subscript for parameters corresponding to Regulator
         #H is subscript for parameters corresponding to the half network I->S -| O

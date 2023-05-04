@@ -19,12 +19,11 @@ params_hill_dict={"sen_params":{"A_s":767.1584089405626,"B_s":16942.01930176865,
 },"out_h_params":{},"out_params":{"A_o":985.9836597373027,"B_o":18015297.65499306,"C_o":0.101052174093944,"N_o":1.417995609958926},"free_params":{"F_o":1.477610561220013}}
 #RSS 0.161
 
-
-
 params_hill_list=dict_to_list(params_hill_dict)
 
 converged_params_list_hill=Plotter(model_type=func,start_guess=params_hill_list,n_iter=1e5,method="Nelder-Mead",params_dict=params_hill_dict,custom_settings=[],tol=0.0001)
 # %%
 converged_params_list_hill=get_WT_params(model_type=func,start_guess=params_hill_list,n_iter=1e5,method="Nelder-Mead",params_dict=params_hill_dict,custom_settings=[],tol=0.0001)
-
+#get_WT_params(model_type=func,start_guess=params_hill_list,n_iter=1e5,method="Nelder-Mead",params_dict=params_hill_dict,custom_settings=[],tol=0.0001)
+#plt.savefig('../results/Hill_WT_Fit.pdf', format="pdf", bbox_inches="tight")
 # %%

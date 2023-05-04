@@ -42,6 +42,15 @@ def dict_to_list(params_dict,return_keys=False):
         a=[list(i.values()) for i in list(params_dict.values())]
 
     return list(chain.from_iterable(a))
+
+def dict_to_list2(params_dict,return_keys=False):
+    if return_keys==True:
+       a=[list(i.keys()) for i in list(params_dict.values())]
+    elif return_keys==False:
+        a=[list(i) for i in list(params_dict.values())]
+
+    return list(chain.from_iterable(a))
+
 def coef_dict_to_list(coef_dict):
     return list(coef_dict.values())
 #the single mutant to be studied
@@ -336,7 +345,7 @@ def get_WT_params(model_type,start_guess:list,params_dict:dict,custom_settings:l
 
     plt.show()
     print("final parameter estimates:", min_result.x)
-
+    plt.savefig('../results/Hill_WT_Fit.pdf', format="pdf", bbox_inches="tight")
     
     return min_result.x
 #%%
@@ -356,7 +365,7 @@ def generate_bounds(params_dict:dict,node:str="",custom_settings:list=[]):
     
     #we will do this by generating the values in a list
     #default behaviour when running for first time should be to make all bounds greater than one.
-    lower=0
+    lower=0.1
         
     WT_params=dict_to_list(params_dict)
     param_names=dict_to_list(params_dict,True)
