@@ -550,3 +550,41 @@ def Plotter(model_type,start_guess:list,params_dict:dict,custom_settings:list,to
 
     
     return 
+
+
+#%%
+import seaborn as sns
+import re
+def Out_to_DF_hill(filepath, model_type):
+    df_list = []
+    with open(filepath) as f:
+        for line in f:
+            # remove whitespace at the start and the newline at the end
+            line = line.strip()
+            # split each column on whitespace
+            columns = re.split('\s+', line, maxsplit=13)
+            cols = [float(x) for x in columns]
+            df_list.append(cols)
+    dataframe = pd.DataFrame(df_list)
+    dataframe.reset_index(drop=True)
+    dataframe.index = np.arange(1,len(dataframe)+1)
+
+    if model_type == model_hill:
+        dataframe.rename(columns={0:'As',1:'Bs',2:'Cs',3:'Ns',4:'Ar',5:'Br',6:'Cr',7:'Nr', 8:'Ao',9:'Bo',10:'Co',11:'No',12:'Fo'}, inplace=True)
+        
+    return dataframe
+
+def Paired_Density_plot(dataframe):
+    sns.set_theme(style="white")
+
+    df = dataframe
+        
+    g = sns.pairplot(df, kind = "kde", corner=True)
+    # g.map_upper(sns.scatterplot, s=15)
+    #g.map_diag(sns.histplot)
+    h = sns.pairplot(df, kind = "hist", corner=True)
+    return g, h
+
+
+
+# %%

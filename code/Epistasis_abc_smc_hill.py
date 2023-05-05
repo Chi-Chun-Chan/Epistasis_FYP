@@ -22,7 +22,7 @@ parlist: List[Dict[str, Union[str, float]]] = [{
 }, {
     'name': 'log_B_s',
     'lower_limit': 2.0,
-    'upper_limit': 3.0
+    'upper_limit': 5.0
 }, {
     'name': 'log_C_s',
     'lower_limit': 2.0,
@@ -41,8 +41,8 @@ parlist: List[Dict[str, Union[str, float]]] = [{
     'upper_limit': 4.0
 }, {
     'name': 'log_C_r',
-    'lower_limit': 3.0,
-    'upper_limit': 5.0
+    'lower_limit': -4.0,
+    'upper_limit': -1.0
 }, {
     'name': 'N_r',
     'lower_limit': 1.0,
@@ -54,17 +54,20 @@ parlist: List[Dict[str, Union[str, float]]] = [{
 }, {
     'name': 'log_B_o',
     'lower_limit': 4.0,
-    'upper_limit': 6.0
+    'upper_limit': 8.0
 }, {
     'name': 'log_C_o',
-    'lower_limit': 2.0,
-    'upper_limit': 4.0
+    'lower_limit': -3.0,
+    'upper_limit': 0.0
 }, {
     'name': 'N_o',
     'lower_limit': 1.0,
     'upper_limit': 4.0
+}, {
+    'name': 'F_o',
+    'lower_limit': 0.0,
+    'upper_limit': 2.0
 }] #12 parameters w/o Fluorescence param
-
 def calculate_distance(pars: List[float]) -> float:
     """ The distance function to be optimised. """
     return score_wrapper_2i(*pars)
@@ -72,7 +75,7 @@ def calculate_distance(pars: List[float]) -> float:
 def score_wrapper_2i(log_A_s: float, log_B_s: float, log_C_s: float,
                      N_s: float, log_A_r: float, log_B_r: float, log_C_r: float,
                      N_r: float, log_A_o: float, log_B_o: float, log_C_o: float,
-                     N_o: float) -> float:
+                     N_o: float, F_o:float) -> float:
     """Wrapper function two-inducer model, to be called by the optimiser."""
     #pylint: disable=too-many-arguments
 
@@ -90,7 +93,7 @@ def score_wrapper_2i(log_A_s: float, log_B_s: float, log_C_s: float,
         "B_o":10**log_B_o,
         "C_o":10**log_C_o,
         "N_o":N_o,
-        "F_o": 1
+        "F_o":F_o
     }
 
     par_list = list(par_dict.values()) 
@@ -286,9 +289,9 @@ def generate_parametrisations(prev_parametrisations=None,
 
 
 def sequential_abc(initial_dist: float = 1000.0,
-                   final_dist: float = 0.5,
+                   final_dist: float = 0.3,
                    n_pars: int = 1000,
-                   prior_label: Optional[int] = None):
+                   prior_label: Optional[int] = None): #None for restart
     """ The main function. The sequence of acceptance thresholds starts
     with initial_dist and keeps on reducing until a final threshold
     final_dist is reached.
