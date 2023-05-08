@@ -466,13 +466,16 @@ def generate_bounds(params_dict:dict,node:str="",custom_settings:list=[]):
     #now applying custom settings
     #param_names
 # %%
-def Plotter(model_type,start_guess:list,params_dict:dict,custom_settings:list,tol:float,method="Nelder-Mead",n_iter:float=1e5,node=""):
+def Plotter(mutation, model_type,start_guess:list,params_dict:dict,custom_settings:list,tol:float,method="Nelder-Mead",n_iter:float=1e5,node=""):
     #this function will estimate the wild type parameters for a given model.
     #now loading wt dataframe
     start_time=time.time()   
     # if start_guess==[]:
     #     start_guess=[1]*20
-    data_=meta_dict['WT']
+    if mutation == 'Wildtype':
+        data_=meta_dict['WT']
+    else:
+        data_ = get_data_SM(mutation)
     bnds=generate_bounds(params_dict=params_dict,node=node,custom_settings=custom_settings)[0]
     #min_result=minimize(min_fun,args=(data_,model_type),x0=start_guess,method='Nelder-Mead',tol=1,bounds=bnds,options={"maxiter":n_iter,"disp":True})
 
@@ -579,11 +582,14 @@ def Paired_Density_plot(dataframe):
 
     df = dataframe
         
-    g = sns.pairplot(df, kind = "kde", corner=True)
+    sns.pairplot(df, kind = "kde", corner=True)
     # g.map_upper(sns.scatterplot, s=15)
     #g.map_diag(sns.histplot)
-    h = sns.pairplot(df, kind = "hist", corner=True)
-    return g, h
+
+    plt.savefig('../results/Hill_Paired_Density.pdf', format="pdf", bbox_inches="tight")
+    # h = sns.pairplot(df, kind = "hist", corner=True)
+
+    return 
 
 
 
