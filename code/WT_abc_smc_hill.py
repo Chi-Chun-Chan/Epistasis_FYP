@@ -13,8 +13,10 @@ import numpy as np  # type: ignore
 from p_tqdm import p_umap  # type: ignore
 from scipy.stats import multivariate_normal, norm, uniform  # type: ignore
 
+#import scoring function
 from RSS_Scoring import *
-#Define list of parameters
+
+#Define list of parameters that will be found using ABC SMC
 parlist: List[Dict[str, Union[str, float]]] = [{
     'name': 'log_A_s',
     'lower_limit': 2.0,
@@ -67,16 +69,19 @@ parlist: List[Dict[str, Union[str, float]]] = [{
     'name': 'F_o',
     'lower_limit': 0.0,
     'upper_limit': 2.0
-}] #12 parameters w/o Fluorescence param
+}] 
+
+#Takes a parameter list and inputs it into the score wrapper which converts 
+#log values and fixes certain parameters if needed
 def calculate_distance(pars: List[float]) -> float:
     """ The distance function to be optimised. """
-    return score_wrapper_2i(*pars)
+    return score_wrapper(*pars)
 
-def score_wrapper_2i(log_A_s: float, log_B_s: float, log_C_s: float,
+def score_wrapper(log_A_s: float, log_B_s: float, log_C_s: float,
                      N_s: float, log_A_r: float, log_B_r: float, log_C_r: float,
                      N_r: float, log_A_o: float, log_B_o: float, log_C_o: float,
                      N_o: float, F_o:float) -> float:
-    """Wrapper function two-inducer model, to be called by the optimiser."""
+    """Intakes a list of parameters and generates a dictionary to be score"""
     #pylint: disable=too-many-arguments
 
     # Make a parameter dictionary, converting the log-spaced system params
@@ -97,7 +102,7 @@ def score_wrapper_2i(log_A_s: float, log_B_s: float, log_C_s: float,
     }
 
     par_list = list(par_dict.values()) 
-    data = meta_dict['WT']
+    data = meta_dict['WT'] #fitting against wildtype data
     
     # Call the actual scoring function
     return RSS_Score(param_list= par_list, model_type=model_hill, data_=data)
@@ -109,6 +114,7 @@ def make_output_folder(name: str = "smc") -> None:
     if not os.path.isdir('../data/'+ name):
         os.mkdir('../data/'+ name)
 
+#Randomly samples parameter values from the designated priors
 def sample_prior() -> List[float]:
     """ Generate one random draw of parameters from the priors. """
     prior = []

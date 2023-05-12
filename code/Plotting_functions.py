@@ -13,9 +13,9 @@ import matplotlib.patches as mpatches
 "with Epistasis values and genotype info. Otheriwse, use Epistasis_hist() to get plots. May need to change fetching"
 "path and file name for Episatsis files but can also use get_Eps instead if working."
 
-Eps_toExcel('observed')
-Eps_toExcel(model = model_hill)
-Eps_toExcel(model = model_thermodynamic)
+# Eps_toExcel('observed')
+# Eps_toExcel(model = model_hill)
+# Eps_toExcel(model = model_thermodynamic)
 #%%
 def Sort_mutants(model): #observed, model_hill, and thermodynamic
     # if model == str('observed'):
@@ -718,3 +718,211 @@ def plt_violin():
     
     return
 # %%
+from typing import Any, Dict, List, Optional, Union
+def Paired_Density_plot(dataframe, name, save:bool):
+    '''Plots joint distribution of parameters from ABC_SMC'''
+    sns.set_theme(style="white")
+
+    df = dataframe
+    col_names = list(df.columns.values)
+        
+    g = sns.pairplot(df, vars = col_names, kind = "kde", corner=True)
+    #sns.axes[0,0].set_xlim((0,0))
+    parlist: List[Dict[str, Union[str, float]]] = {0:{
+    'name': 'log_A_s',
+    'lower_limit': 2.0,
+    'upper_limit': 4.0
+    }, 1: {
+    'name': 'log_B_s',
+    'num': 1,
+    'lower_limit': 2.0,
+    'upper_limit': 5.0
+    }, 2: {
+    'name': 'log_C_s',
+    'lower_limit': 2.0,
+    'upper_limit': 4.0
+    }, 3: {
+    'name': 'N_s',
+    'lower_limit': 1.0,
+    'upper_limit': 4.0
+    }, 4: {
+    'name': 'log_A_r',
+    'lower_limit': 2.0,
+    'upper_limit': 4.0
+    }, 5: {
+    'name': 'log_B_r',
+    'lower_limit': 2.0,
+    'upper_limit': 4.0
+    }, 6: {
+    'name': 'log_C_r',
+    'lower_limit': -4.0,
+    'upper_limit': -1.0
+    }, 7: {
+    'name': 'N_r',
+    'lower_limit': 1.0,
+    'upper_limit': 4.0
+    }, 8: {
+    'name': 'log_A_o',
+    'lower_limit': 2.0,
+    'upper_limit': 4.0
+    }, 9: {
+    'name': 'log_B_o',
+    'lower_limit': 4.0,
+    'upper_limit': 8.0
+    }, 10: {
+    'name': 'log_C_o',
+    'lower_limit': -3.0,
+    'upper_limit': 0.0
+    }, 11: {
+    'name': 'N_o',
+    'lower_limit': 1.0,
+    'upper_limit': 4.0
+    }, 12: {
+    'name': 'F_o',
+    'lower_limit': 0.0,
+    'upper_limit': 2.0
+    } } 
+
+    #uses the priors from the parameters to act as the range
+    g.fig.suptitle(f"Parameter distribution of ({name})")
+
+    count = 14
+
+    for j in range(0,13):
+        count = count - 1
+        for i in range(0,count):
+            g.axes[i,j].set_xlim((parlist[j]['lower_limit'], parlist[j]['upper_limit']))
+            g.axes[i,j].set_ylim((parlist[i]['lower_limit'], parlist[i]['upper_limit']))
+
+
+    if save == True:
+        plt.savefig(f'../results/{name}_Hill_Paired_Density.pdf', format="pdf", bbox_inches="tight")
+    elif save == False:
+        print('plot not saved btw')
+    else:
+        print('Unclear whether to save plot or not')
+    return 
+
+def Paired_Density_plot_mut(dataframe, name, save:bool):
+    '''Plots joint distribution of parameters from ABC_SMC'''
+    sns.set_theme(style="white")
+
+    df = dataframe
+    
+    col_names = list(df.columns.values)
+    g = sns.pairplot(df,kind = 'kde', corner=True)
+
+    # g = sns.pairplot(df, kind = "kde", corner=True)
+
+    #g.setp(axes, xlim=custom_xlim, ylim=custom_ylim)
+    
+    
+    
+    
+    g.axes[0,0].set_xlim((-4,4))
+    g.axes[0,0].set_ylim((-4,4))
+    g.axes[1,0].set_xlim((-4,4))
+    g.axes[1,0].set_ylim((-4,4))
+    g.axes[2,0].set_xlim((-4,4))
+    g.axes[2,0].set_ylim((-4,4))
+    g.axes[3,0].set_xlim((-4,4))
+    g.axes[3,0].set_ylim((-4,4))
+    g.axes[1,1].set_xlim((-4,4))
+    g.axes[1,1].set_ylim((-4,4))
+    g.axes[2,1].set_xlim((-4,4))
+    g.axes[2,1].set_ylim((-4,4))
+    g.axes[3,1].set_xlim((-4,4))
+    g.axes[3,1].set_ylim((-4,4))
+    g.axes[2,2].set_xlim((-4,4))
+    g.axes[2,2].set_ylim((-4,4))
+    g.axes[3,2].set_xlim((-4,4))
+    g.axes[3,2].set_ylim((-4,4))
+
+    
+    
+    g.fig.suptitle(f"Parameter distribution of Mutant ({name})")
+
+
+
+    if save == True:
+        plt.savefig(f'../results/{name}_Hill_Paired_Density.pdf', format="pdf", bbox_inches="tight")
+    elif save == False:
+        print('plot not saved btw')
+    else:
+        print('Unclear whether to save plot or not')
+    # h = sns.pairplot(df, kind = "hist", corner=True)
+
+    return 
+#%%
+from Model_fitting_functions import *
+from random import seed
+def Plot_SM_Hill_Results(iter):
+    '''Plots 100 random sets of parameters obtained from the multivariate gaussian onto the data'''
+    #obtain wildtype disribution
+    path = '../data/smc_hill/pars_final.out'
+    WT_converged_params = Out_to_DF_hill(path, model_hill, mut_name = '', all = False)
+    param_dist = multivariate_dis(WT_converged_params, 13)
+    
+    #Regulator only 
+    mutant_range:slice=slice(10,11) #len(SM_names)-10
+    
+    fig, [[Regulator1, Regulator2,Regulator3, Regulator4, Regulator5], [Regulator6, Regulator7, Regulator8, Regulator9, Regulator10]] = plt.subplots(nrows=2,ncols=5, constrained_layout=True, figsize=(7, 12))
+    for i in SM_names[mutant_range]: 
+        SM_mutant_of_interest=i
+        start_time_per_mutant=time.time()
+            
+        SM_df = get_data_SM(SM_mutant_of_interest)
+        data_ = SM_df
+
+        #obtain outs file for each mutant as dataframe
+        path =f'../data/smc_SM_hill/{SM_mutant_of_interest}_smc/all_pars_{iter}.out'
+        df = Out_to_DF_hill(path,model_hill.model_muts,SM_mutant_of_interest, all = True)
+        df_dist = multivariate_dis(df, 26)
+        rndint = np.random.randint(low=0, high=1e7)
+        #generate 100 random parameter sets for modifier fits
+        timeseed = time.time_ns() % 2**16
+        np.random.seed(rndint+timeseed)
+        seed(rndint+timeseed)
+        mut_params = df_dist.rvs(size=100, random_state=rndint+timeseed)
+        #plot using model_muts onto SM data_
+        #get list of parameters from df and then put it through the model_muts to get sensor list
+
+        hill=model_hill(params_list=[1]*13,I_conc=meta_dict["WT"].S)
+        rndint = np.random.randint(low=0, high=1e7)
+    
+        timeseed = time.time_ns() % 2**16
+        np.random.seed(rndint+timeseed)
+        seed(rndint+timeseed)
+        
+        WT_params = param_dist.rvs(size=1, random_state=rndint+timeseed)
+        Sensor_est_array_WT,Regulator_est_array_WT,Output_est_array_WT, Stripe_est_array_WT = hill.model(I_conc=data_.S,params_list=WT_params)
+
+        temp_dict = {'Regulator1': Regulator1, 'Regulator2':Regulator2, 'Regulator3':Regulator3, 'Regulator4':Regulator4, 'Regulator5': Regulator5, 'Regulator6':Regulator6, 'Regulator7':Regulator7, 'Regulator8':Regulator8,'Regulator9': Regulator9, 'Regulator10': Regulator10}
+        #scatter plot, Sensor is the position of the plot
+        WT_Plotter(temp_dict[SM_mutant_of_interest],"S", "Stripe", {'color':'green'},data=data_)
+        #fits, WT
+        WT_fit_plot(temp_dict[SM_mutant_of_interest],"S", Stripe_est_array_WT, {'color':'black'},label="Wildtype",data=data_)
+
+        #fits 100
+        for i in range(0,len(mut_params)):
+            Sensor_est_array,Regulator_est_array,Output_est_array, Stripe_est_array = hill.model_muts(I_conc=data_.S,params_list=mut_params[i]) #need to convert back to 10^
+
+            WT_fit_plot2(temp_dict[SM_mutant_of_interest],"S", Stripe_est_array,{'color':'green'},label="Converged",data=data_, a = 0.3)
+    
+        #Save figure to results
+        fig.savefig((os.path.join("../results","Regulator","_SM_fits",".pdf")), bbox_inches='tight')
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+

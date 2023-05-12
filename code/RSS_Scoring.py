@@ -25,16 +25,31 @@ def min_func_all(params_list,data,model_type):
                 #need to ignore reg and output in fitting
                 log_reg,log_reg_est,log_out,log_out_est=0,0,0,0
 
+        if "Mutant_ID" in data:
+            mutant_id=data.Mutant_ID[0]
+            if mutant_id.startswith("Regulator"):
+                #need to ignore output (and sen?) in fitting
+                log_sen,log_sen_est,log_out,log_out_est, log_reg, log_reg_est=0,0,0,0,0,0
+                
+        if "Mutant_ID" in data:
+            mutant_id=data.Mutant_ID[0]
+            if mutant_id.startswith("Output"):
+                #need to ignore output (and sen?) in fitting
+                log_sen,log_sen_est,log_reg, log_reg_est,log_out,log_out_est=0,0,0,0,0,0
+                
         result = np.power((log_sen - log_sen_est), 2)
         result += np.power((log_reg - log_reg_est), 2)
         result += np.power((log_out - log_out_est), 2)
         result += np.power((log_stripe - log_stripe_est), 2)
-        return np.sum(result) 
+        return np.sum(result)
 
 #%%
-def RSS_Score(param_list:list,model_type,data_):
+def RSS_Score(param_list:list,model_type,data_, model_specs:str):
         Model = model_type(params_list=[1]*13, I_conc=meta_dict["WT"].S)
-        func = Model.model
+        if model_specs == 'model_muts':
+                func = Model.model_muts
+        else:
+                func = Model.model
         rss_converged=min_func_all(data=data_,params_list=param_list,model_type=func)
         return rss_converged
         

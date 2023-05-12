@@ -8,6 +8,7 @@ from functools import partial
 from random import choices, seed
 from typing import Any, Dict, List, Optional, Union
 from Model_fitting_functions import *
+from Models import *
 
 import numpy as np  # type: ignore
 from p_tqdm import p_umap  # type: ignore
@@ -32,27 +33,27 @@ parlistS: List[Dict[str, Union[str, float]]] = [{
     'name': 'N_s',
     'lower_limit': 1.0,
     'upper_limit': 4.0
-}] 
-
-parlistR: List[Dict[str, Union[str, float]]] = [{
+},  {
+    'name': 'log_M_s',  #modifier term for mutants
+    'lower_limit': -2.0,
+    'upper_limit': 2.0
+},{
     'name': 'log_A_r',
-    'lower_limit': 0.0, #2.0
-    'upper_limit': 7.0 #4.0
+    'lower_limit': 1.0, #2.0
+    'upper_limit': 5.0 #4.0
 }, {
     'name': 'log_B_r',
-    'lower_limit': 0.0, #2.0
-    'upper_limit': 7.0 #4.0
+    'lower_limit': 1.0, #2.0
+    'upper_limit': 5.0 #4.0
 }, {
     'name': 'log_C_r',
-    'lower_limit': -7.0, #-4.0
-    'upper_limit': 3.0 #-1.0
+    'lower_limit': -5.0, #-4.0
+    'upper_limit': 2.0 #-1.0
 }, {
     'name': 'N_r',
     'lower_limit': 0.0, #1.0
     'upper_limit': 4.0 #4.0
-}] 
-
-parlistO: List[Dict[str, Union[str, float]]] = [{
+}, {
     'name': 'log_A_o',
     'lower_limit': 2.0,
     'upper_limit': 4.0
@@ -74,8 +75,110 @@ parlistO: List[Dict[str, Union[str, float]]] = [{
     'upper_limit': 2.0
 }] 
 
+parlistR: List[Dict[str, Union[str, float]]] = [{
+    'name': 'log_A_s',
+    'lower_limit': 2.0,
+    'upper_limit': 4.0
+}, {
+    'name': 'log_B_s',
+    'lower_limit': 2.0,
+    'upper_limit': 5.0
+}, {
+    'name': 'log_C_s',
+    'lower_limit': 2.0,
+    'upper_limit': 4.0
+}, {
+    'name': 'N_s',
+    'lower_limit': 1.0,
+    'upper_limit': 4.0
+}, {
+    'name': 'log_A_r',
+    'lower_limit': 1.0, #2.0
+    'upper_limit': 5.0 #4.0
+}, {
+    'name': 'log_B_r',
+    'lower_limit': 1.0, #2.0
+    'upper_limit': 5.0 #4.0
+}, {
+    'name': 'log_C_r',
+    'lower_limit': -5.0, #-4.0
+    'upper_limit': 2.0 #-1.0
+}, {
+    'name': 'N_r',
+    'lower_limit': 0.0, #1.0
+    'upper_limit': 4.0 #4.0
+}, {
+    'name': 'log_M_r',  
+    'lower_limit': -2.0,
+    'upper_limit': 2.0
+}, {
+    'name': 'log_A_o',
+    'lower_limit': 2.0,
+    'upper_limit': 4.0
+}, {
+    'name': 'log_B_o',
+    'lower_limit': 4.0,
+    'upper_limit': 8.0
+}, {
+    'name': 'log_C_o',
+    'lower_limit': -3.0,
+    'upper_limit': 0.0
+}, {
+    'name': 'N_o',
+    'lower_limit': 1.0,
+    'upper_limit': 4.0
+}, {
+    'name': 'F_o',
+    'lower_limit': 0.0,
+    'upper_limit': 2.0
+}] 
+
+parlistO: List[Dict[str, Union[str, float]]] = [{
+    'name': 'log_A_s',
+    'lower_limit': 2.0,
+    'upper_limit': 4.0
+}, {
+    'name': 'log_B_s',
+    'lower_limit': 2.0,
+    'upper_limit': 5.0
+}, {
+    'name': 'log_C_s',
+    'lower_limit': 2.0,
+    'upper_limit': 4.0
+}, {
+    'name': 'N_s',
+    'lower_limit': 1.0,
+    'upper_limit': 4.0
+}, {
+    'name': 'log_A_o',
+    'lower_limit': 2.0,
+    'upper_limit': 4.0
+}, {
+    'name': 'log_B_o',
+    'lower_limit': 4.0,
+    'upper_limit': 8.0
+}, {
+    'name': 'log_C_o',
+    'lower_limit': -3.0,
+    'upper_limit': 0.0
+}, {
+    'name': 'N_o',
+    'lower_limit': 1.0,
+    'upper_limit': 4.0
+}, {
+    'name': 'F_o',
+    'lower_limit': 0.0,
+    'upper_limit': 2.0
+}, {
+    'name': 'log_M_o',
+    'lower_limit': -2.0,
+    'upper_limit': 2.0
+}] 
+
 def score_wrapper_S(log_A_s: float, log_B_s: float, log_C_s: float,
-                     N_s: float) -> float:
+                     N_s: float, log_M_s:float, log_A_r: float, log_B_r: float, log_C_r: float,
+                     N_r: float, log_A_o: float, log_B_o: float, log_C_o: float,
+                     N_o: float, F_o:float) -> float:
     """Wrapper function two-inducer model, to be called by the optimiser."""
     #pylint: disable=too-many-arguments
 
@@ -92,15 +195,18 @@ def score_wrapper_S(log_A_s: float, log_B_s: float, log_C_s: float,
     "B_s":10**log_B_s,
     "C_s":10**log_C_s,
     "N_s":N_s,
-    "A_r":10**3.367414514911509116e+00,
-    "B_r":10**3.841889231200538379e+00,
-    "C_r":10**-2.898387275917982286e+00,
-    "N_r":1.742140699208641008e+00,
-    "A_o":10**3.039548305373660053e+00,
-    "B_o":10**4.894183658414895888e+00,
-    "C_o":10**-2.822117047581649274e+00,
-    "N_o":1.688399702374762335e+00,
-    "F_o":1.522445716338543864e+00
+    "M_s":10**log_M_s,
+    "A_r":10**log_A_r,
+    "B_r":10**log_B_r,
+    "C_r":10**log_C_r,
+    "N_r":N_r,
+    "M_r":1.0,
+    "A_o":10**log_A_o,
+    "B_o":10**log_B_o,
+    "C_o":10**log_C_o,
+    "N_o":N_o,
+    "F_o":F_o,
+    "M_o":1.0
         }
 
     par_list = list(par_dict.values()) 
@@ -108,24 +214,29 @@ def score_wrapper_S(log_A_s: float, log_B_s: float, log_C_s: float,
     # Call the actual scoring function
     return par_list
 
-def score_wrapper_R(log_A_r: float, log_B_r: float, log_C_r: float,
-                     N_r: float) -> float:
+def score_wrapper_R(log_A_s: float, log_B_s: float, log_C_s: float,
+                     N_s: float, log_A_r: float, log_B_r: float, log_C_r: float,
+                     N_r: float, log_M_r:float, log_A_o: float, log_B_o: float, log_C_o: float,
+                     N_o: float, F_o:float) -> float:
     """Wrapper function two-inducer model, to be called by the optimiser."""
 
     par_dict = {
-    "A_s":10**2.881002710475187190e+00,
-    "B_s":10**4.234114461927148021e+00,
-    "C_s":10**2.917517255582483315e+00,
-    "N_s":1.125732163978979461e+00,
+    "A_s":10**log_A_s,
+    "B_s":10**log_B_s,
+    "C_s":10**log_C_s,
+    "N_s":N_s,
+    "M_s":1.0,
     "A_r":10**log_A_r,
     "B_r":10**log_B_r,
     "C_r":10**log_C_r,
     "N_r":N_r,
-    "A_o":10**3.039548305373660053e+00,
-    "B_o":10**4.894183658414895888e+00,
-    "C_o":10**-2.822117047581649274e+00,
-    "N_o":1.688399702374762335e+00,
-    "F_o":1.522445716338543864e+00
+    "M_r":10**log_M_r,
+    "A_o":10**log_A_o,
+    "B_o":10**log_B_o,
+    "C_o":10**log_C_o,
+    "N_o":N_o,
+    "F_o":F_o,
+    "M_o":1.0
     }
 
     par_list = list(par_dict.values()) 
@@ -133,24 +244,29 @@ def score_wrapper_R(log_A_r: float, log_B_r: float, log_C_r: float,
     # Call the actual scoring function
     return par_list
 
-def score_wrapper_O(log_A_o: float, log_B_o: float, log_C_o: float,
-                     N_o: float, F_o:float) -> float:
+def score_wrapper_O(log_A_s: float, log_B_s: float, log_C_s: float,
+                     N_s: float, log_A_r: float, log_B_r: float, log_C_r: float,
+                     N_r: float, log_A_o: float, log_B_o: float, log_C_o: float,
+                     N_o: float, F_o:float, log_M_o:float,) -> float:
     """Wrapper function two-inducer model, to be called by the optimiser."""
 
     par_dict = {
-    "A_s":10**2.881002710475187190e+00,
-    "B_s":10**4.234114461927148021e+00,
-    "C_s":10**2.917517255582483315e+00,
-    "N_s":1.125732163978979461e+00,
-    "A_r":10**3.367414514911509116e+00,
-    "B_r":10**3.841889231200538379e+00,
-    "C_r":10**-2.898387275917982286e+00,
-    "N_r":1.742140699208641008e+00,
+    "A_s":10**log_A_s,
+    "B_s":10**log_B_s,
+    "C_s":10**log_C_s,
+    "N_s":N_s,
+    "M_s":1.0,
+    "A_r":10**log_A_r,
+    "B_r":10**log_B_r,
+    "C_r":10**log_C_r,
+    "N_r":N_r,
+    "M_r":1.0,
     "A_o":10**log_A_o,
     "B_o":10**log_B_o,
     "C_o":10**log_C_o,
     "N_o":N_o,
-    "F_o":F_o
+    "F_o":F_o,
+    "M_o":10**log_M_o
     }
 
     par_list = list(par_dict.values()) 
@@ -171,21 +287,39 @@ def sample_prior_S() -> List[float]:
     for par_entry in parlistS:
         keys = par_entry.keys()
         # If limits are given, we use a uniform distribution
-        if "lower_limit" in keys and "upper_limit" in keys:
-            lower = float(par_entry["lower_limit"])
-            upper = float(par_entry["upper_limit"])
-            # Note that scale parameter denotes the width of the distribution!
-            # docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
-            prior.append(uniform.rvs(loc=lower, scale=upper - lower))
+        if par_entry['name'].endswith("s"):
+            if "lower_limit" in keys and "upper_limit" in keys:
+                lower = float(par_entry["lower_limit"])
+                upper = float(par_entry["upper_limit"])
+                # Note that scale parameter denotes the width of the distribution!
+                # docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
+                prior.append(uniform.rvs(loc=lower, scale=upper - lower))
 
-        # If mean and stdev are given, we use a Gaussian
-        elif "mean" in keys and "stdev" in keys:
-            mean = float(par_entry["mean"])
-            stdev = float(par_entry["stdev"])
-            prior.append(norm.rvs(loc=mean, scale=stdev))
+            # If mean and stdev are given, we use a Gaussian
+            elif "mean" in keys and "stdev" in keys:
+                mean = float(par_entry["mean"])
+                stdev = float(par_entry["stdev"])
+                prior.append(norm.rvs(loc=mean, scale=stdev))
 
-        else:
-            raise KeyError("Prior unclear.")  
+            else:
+                raise KeyError("Prior unclear.")  
+        else:  
+            rndint = np.random.randint(low=0, high=1e7)
+    
+            timeseed = time.time_ns() % 2**16
+            np.random.seed(rndint+timeseed)
+            seed(rndint+timeseed)
+            path = '../data/smc_hill/pars_final.out'
+
+            WT_converged_params = Out_to_DF_hill(path, model_hill)
+
+            param_dist = multivariate_dis(WT_converged_params,13)
+            random_params = param_dist.rvs(size=1, random_state=rndint+timeseed)
+
+            WT_dict = {'log_A_s':0,'log_B_s':1,'log_C_s':2,'N_s':3,'log_A_r':4,'log_B_r':5,'log_C_r':6,'N_r':7,'log_A_o':8,'log_B_o':9,'log_C_o':10,'N_o':11,'F_o':12}
+
+            param_name = par_entry['name']
+            prior.append(random_params[WT_dict[param_name]])
     return prior
 
 def sample_prior_R() -> List[float]:
@@ -194,21 +328,39 @@ def sample_prior_R() -> List[float]:
     for par_entry in parlistR:
         keys = par_entry.keys()
         # If limits are given, we use a uniform distribution
-        if "lower_limit" in keys and "upper_limit" in keys:
-            lower = float(par_entry["lower_limit"])
-            upper = float(par_entry["upper_limit"])
-            # Note that scale parameter denotes the width of the distribution!
-            # docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
-            prior.append(uniform.rvs(loc=lower, scale=upper - lower))
+        if par_entry['name'].endswith("r"):
+            if "lower_limit" in keys and "upper_limit" in keys:
+                lower = float(par_entry["lower_limit"])
+                upper = float(par_entry["upper_limit"])
+                # Note that scale parameter denotes the width of the distribution!
+                # docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
+                prior.append(uniform.rvs(loc=lower, scale=upper - lower))
 
-        # If mean and stdev are given, we use a Gaussian
-        elif "mean" in keys and "stdev" in keys:
-            mean = float(par_entry["mean"])
-            stdev = float(par_entry["stdev"])
-            prior.append(norm.rvs(loc=mean, scale=stdev))
+            # If mean and stdev are given, we use a Gaussian
+            elif "mean" in keys and "stdev" in keys:
+                mean = float(par_entry["mean"])
+                stdev = float(par_entry["stdev"])
+                prior.append(norm.rvs(loc=mean, scale=stdev))
 
-        else:
-            raise KeyError("Prior unclear.") 
+            else:
+                raise KeyError("Prior unclear.")  
+        else: 
+            rndint = np.random.randint(low=0, high=1e7)
+    
+            timeseed = time.time_ns() % 2**16
+            np.random.seed(rndint+timeseed)
+            seed(rndint+timeseed)
+            path = '../data/smc_hill/pars_final.out'
+
+            WT_converged_params = Out_to_DF_hill(path, model_hill)
+
+            param_dist = multivariate_dis(WT_converged_params,13)
+            random_params = param_dist.rvs(size=1, random_state=rndint+timeseed)
+
+            WT_dict = {'log_A_s':0,'log_B_s':1,'log_C_s':2,'N_s':3,'log_A_r':4,'log_B_r':5,'log_C_r':6,'N_r':7,'log_A_o':8,'log_B_o':9,'log_C_o':10,'N_o':11,'F_o':12}
+
+            param_name = par_entry['name']
+            prior.append(random_params[WT_dict[param_name]])
     return prior
 
 def sample_prior_O() -> List[float]:
@@ -217,22 +369,40 @@ def sample_prior_O() -> List[float]:
     for par_entry in parlistO:
         keys = par_entry.keys()
         # If limits are given, we use a uniform distribution
-        if "lower_limit" in keys and "upper_limit" in keys:
-            lower = float(par_entry["lower_limit"])
-            upper = float(par_entry["upper_limit"])
-            # Note that scale parameter denotes the width of the distribution!
-            # docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
-            prior.append(uniform.rvs(loc=lower, scale=upper - lower))
+        if par_entry['name'].endswith("o"):
+            if "lower_limit" in keys and "upper_limit" in keys:
+                lower = float(par_entry["lower_limit"])
+                upper = float(par_entry["upper_limit"])
+                # Note that scale parameter denotes the width of the distribution!
+                # docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
+                prior.append(uniform.rvs(loc=lower, scale=upper - lower))
 
-        # If mean and stdev are given, we use a Gaussian
-        elif "mean" in keys and "stdev" in keys:
-            mean = float(par_entry["mean"])
-            stdev = float(par_entry["stdev"])
-            prior.append(norm.rvs(loc=mean, scale=stdev))
+            # If mean and stdev are given, we use a Gaussian
+            elif "mean" in keys and "stdev" in keys:
+                mean = float(par_entry["mean"])
+                stdev = float(par_entry["stdev"])
+                prior.append(norm.rvs(loc=mean, scale=stdev))
 
-        else:
-            raise KeyError("Prior unclear.")
-       
+            else:
+                raise KeyError("Prior unclear.")  
+        else: 
+            rndint = np.random.randint(low=0, high=1e7)
+    
+            timeseed = time.time_ns() % 2**16
+            np.random.seed(rndint+timeseed)
+            seed(rndint+timeseed)
+            
+            path = '../data/smc_hill/pars_final.out'
+
+            WT_converged_params = Out_to_DF_hill(path, model_hill)
+
+            param_dist = multivariate_dis(WT_converged_params,13)
+            random_params = param_dist.rvs(size=1, random_state=rndint+timeseed)
+
+            WT_dict = {'log_A_s':0,'log_B_s':1,'log_C_s':2,'N_s':3,'log_A_r':4,'log_B_r':5,'log_C_r':6,'N_r':7,'log_A_o':8,'log_B_o':9,'log_C_o':10,'N_o':11,'F_o':12}
+
+            param_name = par_entry['name']
+            prior.append(random_params[WT_dict[param_name]])
     return prior
 
 def evaluate_parametrisationS(pars: List[float]) -> float:
@@ -333,22 +503,22 @@ def generate_parametrisation(name, data,
                     proposed_pars = sample_prior_S()
                     if evaluate_parametrisationS(proposed_pars) > 0:
                         par_list = score_wrapper_S(*proposed_pars)
-                        score = RSS_Score(param_list= par_list, model_type=model_hill, data_=data)
-
+                        current_dist = RSS_Score(param_list= par_list, model_type=model_hill, data_=data, model_specs= 'model_muts')
+                        evaluated_distances.append(current_dist)
             elif name.startswith("Regulator"):
                     proposed_pars = sample_prior_R()
                     if evaluate_parametrisationR(proposed_pars) > 0:
                         par_list = score_wrapper_R(*proposed_pars)
-                        score = RSS_Score(param_list= par_list, model_type=model_hill, data_=data)
-
+                        current_dist = RSS_Score(param_list= par_list, model_type=model_hill, data_=data, model_specs= 'model_muts')
+                        evaluated_distances.append(current_dist)
             elif name.startswith("Output"):
                     proposed_pars = sample_prior_O()
                     if evaluate_parametrisationO(proposed_pars) > 0:
                         par_list = score_wrapper_O(*proposed_pars)
-                        score = RSS_Score(param_list= par_list, model_type=model_hill, data_=data)
-         
-            current_dist = score
-            evaluated_distances.append(current_dist)
+                        current_dist = RSS_Score(param_list= par_list, model_type=model_hill, data_=data, model_specs= 'model_muts')
+                        evaluated_distances.append(current_dist)
+            
+            
 
         # Once we got our parametrisation, set its weight to unity
         current_weight = 1.0
@@ -371,19 +541,19 @@ def generate_parametrisation(name, data,
             if name.startswith("Sensor"):
                     if evaluate_parametrisationS(proposed_pars) > 0:
                         par_list = score_wrapper_S(*proposed_pars)
-                        current_dist = RSS_Score(param_list= par_list, model_type=model_hill, data_=data)
+                        current_dist = RSS_Score(param_list= par_list, model_type=model_hill, data_=data, model_specs= 'model_muts')
                         evaluated_distances.append(current_dist)
 
             elif name.startswith("Regulator"):
                     if evaluate_parametrisationR(proposed_pars) > 0:
                         par_list = score_wrapper_R(*proposed_pars)
-                        current_dist = RSS_Score(param_list= par_list, model_type=model_hill, data_=data)
+                        current_dist = RSS_Score(param_list= par_list, model_type=model_hill, data_=data, model_specs= 'model_muts')
                         evaluated_distances.append(current_dist)
 
             elif name.startswith("Output"):
                     if evaluate_parametrisationO(proposed_pars) > 0:
                         par_list = score_wrapper_O(*proposed_pars)
-                        current_dist = RSS_Score(param_list= par_list, model_type=model_hill, data_=data)
+                        current_dist = RSS_Score(param_list= par_list, model_type=model_hill, data_=data, model_specs= 'model_muts')
                         evaluated_distances.append(current_dist)
 
             # if evaluate_parametrisation(proposed_pars) > 0:
@@ -415,7 +585,6 @@ def generate_parametrisation(name, data,
         
         if name.startswith("Sensor"):
             current_weight = evaluate_parametrisationS(proposed_pars) / sum_denom
-
         elif name.startswith("Regulator"):
             current_weight = evaluate_parametrisationR(proposed_pars) / sum_denom    
         elif name.startswith("Output"):
