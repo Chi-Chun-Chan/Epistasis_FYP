@@ -23,7 +23,7 @@ def min_func_all(params_list,data,model_type):
             mutant_id=data.Mutant_ID[0]
             if mutant_id.startswith("Sensor"):
                 #need to ignore reg and output in fitting
-                log_reg,log_reg_est,log_out,log_out_est=0,0,0,0
+                log_reg,log_reg_est, log_sen, log_sen_est, log_out,log_out_est=0,0,0,0,0,0
 
         if "Mutant_ID" in data:
             mutant_id=data.Mutant_ID[0]

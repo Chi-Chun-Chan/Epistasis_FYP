@@ -18,11 +18,7 @@ import seaborn as sns
 from random import seed
 import time
 from Plotting_functions import *
-# dataframe = pd.read_csv('../data/smc/pars_final.out')
-# dataf = pd.read_csv(dataframe, delimiter=' ', index_col=None, header=None)
-
 '''Visualising Hill WT parameter distributions'''
-start_time_per_mutant=time.time()
 
 path = '../data/smc_hill/pars_final.out'
 
@@ -30,65 +26,46 @@ WT_converged_params = Out_to_DF_hill(path, model_hill.model, '', all = False)
 
 param_dist = multivariate_dis(WT_converged_params, 13)
 
-# np.random.seed(0)  
-# rndint = np.random.randint(low=0, high=1e7)
-    
-# timeseed = time.time_ns() % 2**16
-# np.random.seed(rndint+timeseed)
-# seed(rndint+timeseed)
-
-# random_params = param_dist.rvs(size=1, random_state=rndint+timeseed)
-
-
-#plot the parameters of As and Bs as scatterplot
-#generate 100 random parameters sets and then plot that on top of the scatter to visualise whether
-#they fit in the distribution.
-
-#test to see if sampling from multi-variate distribution works
-# A_s = []
-# A_s = WT_converged_params['Br'].to_numpy()
-
-# B_s = []
-# B_s = WT_converged_params['Cr'].to_numpy()
-
-# A_s_gaus = []
-# B_s_gaus = []
-# temp = param_dist.rvs(size=100, random_state=rndint+timeseed+200)
-
-# for items in temp:
-#     A_s_gaus.append(items[5])
-#     B_s_gaus.append(items[6])
-
-# plt.scatter(A_s,B_s, c = 'b')
-# plt.scatter(A_s_gaus,B_s_gaus, c ='r') 
-
-
-
-
-#sample_prior()
-
-#for each sample prior, select random_params using a random seed
-#then use each one e.g random_params[0] as the prior for that variable
-#Still use three different sample_prior functions. Still need three par_lists, then Modifier element for mutant params.
-
-# par_list = list(df.columns)
-# df = pd.melt(df, value_vars=par_list, var_name='params', value_name='Param value',ignore_index=False)
-
 WT = 'Wildtype'
-Paired_Density_plot(WT_converged_params, name = WT)
-
-
-
+Paired_Density_plot(WT_converged_params, name = WT, save=True)
 
 #%%
+'''visualising whether the random selection of params from multi-v guassian is correct'''
+start_time_per_mutant=time.time()
+np.random.seed(0)  
+rndint = np.random.randint(low=0, high=1e7)
+    
+timeseed = time.time_ns() % 2**16
+np.random.seed(rndint+timeseed)
+seed(rndint+timeseed)
+
+WT_converged_params = Out_to_DF_hill(path, model_hill.model, '', all = False) #WT SMC_ABC results
+
+param_dist = multivariate_dis(WT_converged_params, 13) #convert to multivariable distribution
+
+random_params = param_dist.rvs(size=1, random_state=rndint+timeseed) #randomly selects one set of parameters
+
+#test to see if sampling from multi-variate distribution works
+param1 = []
+param1 = WT_converged_params['Br'].to_numpy()
+
+param2 = []
+param2 = WT_converged_params['Cr'].to_numpy()
+
+param1_gaus = []
+param2_gaus = []
+temp = param_dist.rvs(size=100, random_state=rndint+timeseed+200)
+
+for items in temp:
+    param1_gaus.append(items[5]) #Looks at the 5th and 6th parameters from the param set
+    param2_gaus.append(items[6]) #Both values were taken from the same random sample
+
+plt.scatter(param1,param2, c = 'b', label= 'WT param dist') #WT
+plt.scatter(param1_gaus,param2_gaus, c ='r', label= 'Multi-variate gaus') 
+#%%
+'''Old strategy single parameter set visualisation'''
 Hill_model = model_hill(params_list=[1]*13, I_conc=meta_dict["WT"].S)
 func = Hill_model.model
-
-# params_hill_dict={"sen_params":{"A_s":767.1584089405626,"B_s":16942.01930176865,"C_s":896.97,"N_s":1.151181955178552},"reg_params":{"A_r":2229.803862083969,"B_r":8961.65164532133,"C_r":0.001461383502353,"N_r":1.84
-# },"out_h_params":{},"out_params":{"A_o":985.9836597373027,"B_o":18015297.65499306,"C_o":0.101052174093944,"N_o":1.417995609958926},"free_params":{"F_o":1.477610561220013}}#RSS 0.161
-# params_hill_dict={"sen_params":{"A_s":10**2.838248875556981687e+00,"B_s":10**4.295428708881752655e+00,"C_s":10**2.779099379130348879e+00,"N_s":1.020179391796438129e+00},"reg_params":{"A_r":10**3.308479807112040927e+00,"B_r":10**3.641716161424724429e+00,"C_r":10**-3.110782482589740994e+00,"N_r":1.786350481190633221e+00
-# },"out_h_params":{},"out_params":{"A_o":10**3.080940458532804183e+00,"B_o":10**6.789192470034910443e+00,"C_o":10**-1.165526383628718854e+00,"N_o":1.309353801416837548e+00},"free_params":{"F_o":1.0e+00}}
-# params_hill_list=dict_to_list(params_hill_dict)
 
 params_hill_dict={"sen_params":{"A_s":10**2.881002710475187190e+00,"B_s":10**4.234114461927148021e+00,"C_s":10**2.917517255582483315e+00,"N_s":1.125732163978979461e+00},"reg_params":{"A_r":10**3.367414514911509116e+00,"B_r":10**3.841889231200538379e+00,"C_r":10**-2.898387275917982286e+00,"N_r":1.742140699208641008e+00
 },"out_h_params":{},"out_params":{"A_o":10**3.039548305373660053e+00,"B_o":10**4.894183658414895888e+00,"C_o":10**-2.822117047581649274e+00,"N_o":1.688399702374762335e+00},"free_params":{"F_o":1.522445716338543864e+00}}
@@ -98,38 +75,19 @@ converged_params_list_hill=Plotter(model_type=func,start_guess=params_hill_list,
 
 data = meta_dict["WT"]
 RSS_Score(params_hill_list,model_hill,data, model_specs='None')
+
+#minimisation to data using non-linear least squares
+converged_params_list_hill=get_WT_params(model_type=func,start_guess=params_hill_list,n_iter=1e5,method="Nelder-Mead",params_dict=params_hill_dict,custom_settings=[],tol=0.0001) 
 # %%
-converged_params_list_hill=get_WT_params(model_type=func,start_guess=params_hill_list,n_iter=1e5,method="Nelder-Mead",params_dict=params_hill_dict,custom_settings=[],tol=0.0001)
-#get_WT_params(model_type=func,start_guess=params_hill_list,n_iter=1e5,method="Nelder-Mead",params_dict=params_hill_dict,custom_settings=[],tol=0.0001)
-#plt.savefig('../results/Hill_WT_Fit.pdf', format="pdf", bbox_inches="tight")
-# %%
-#testing abc_smc for SM
-Hill_model = model_hill(params_list=[1]*13, I_conc=meta_dict["WT"].S)
-func = Hill_model.model
-d = get_data_SM("Output2")
-
-params_dict = {"sen_params":{"A_s":10**2.881002710475187190e+00,"B_s":10**4.234114461927148021e+00,"C_s":10**2.917517255582483315e+00,"N_s":1.125732163978979461e+00},"reg_params":{"A_r":10**3.367414514911509116e+00,"B_r":10**3.841889231200538379e+00,"C_r":10**-2.898387275917982286e+00,"N_r":1.742140699208641008e+00
-},"out_h_params":{},"out_params":{"A_o":10**3.640658721691746535e+00,"B_o":10**4.998187132976670277e+00,"C_o":10**-2.646560931451678922e+00,"N_o":1.143877351914554641e+00},"free_params":{"F_o":9.577592265972070251e-01}}
-
-params_list=dict_to_list(params_dict)
-
-Plotter(model_type=func,start_guess=params_list,n_iter=1e5,method="Nelder-Mead",params_dict=params_dict,custom_settings=[],tol=0.0001,mutation='Output2')
-RSS_Score(params_list,model_hill,d, model_specs='None')
-
-
-
-# %%
-'''Plotting functions to visualise Hill params'''
+'''Plotting functions to visualise Hill modifier params for SM'''
 #Visualising parameter distribution
 from Plotting_functions import *
 from RSS_Scoring import *
-def Visualise_SM_par(mut_name, iter, plot_num):
-    '''Looking at the parameter distribution and fits'''
+def Visualise_SM_fit(mut_name, iter, plot_num):
+    '''Looking at the general fits to data'''
     path = f'../data/smc_SM_hill/{mut_name}_smc/all_pars_{iter}.out'  #iter = final
     path2 = f'../data/smc_SM_hill/{mut_name}_smc/pars_{iter}.out'  #only modifiers
     df = Out_to_DF_hill(path, model_hill.model_muts, mut_name, all=True)
-    # df2 = Out_to_DF_hill(path2, model_hill.model_muts, mut_name, all=False)
-    # Paired_Density_plot_mut(df2, name = mut_name)
 
     SM_df = get_data_SM(mut_name)
     data_ = SM_df
@@ -191,24 +149,146 @@ def Visualise_SM_par(mut_name, iter, plot_num):
     return fig, score_list
 
 
-fig, scores = Visualise_SM_par(mut_name='Regulator1', iter = 'final', plot_num = 50)
+fig, scores = Visualise_SM_fit(mut_name='Regulator1', iter = 'final', plot_num = 50)
 print(scores)
 
-
+def Visualise_SM_par_dis(mut_name, iter):
+    path2 = f'../data/smc_SM_hill/{mut_name}_smc/pars_{iter}.out'  #only modifiers
+    df2 = Out_to_DF_hill(path2, model_hill.model_muts, mut_name, all=False)
     
+    return Paired_Density_plot_mut(df2, name = mut_name, save = True)
 
-
-
-
-
-
-
+Visualise_SM_par_dis(mut_name='Regulator1', iter = 'final')
 
 # %%
-from Plotting_functions import *
-mut_name = 'Regulator1'
-iter = 'final'
-path2 = f'../data/smc_SM_hill/{mut_name}_smc/pars_{iter}.out'  #only modifiers
-df2 = Out_to_DF_hill(path2, model_hill.model_muts, mut_name, all=False)
-Paired_Density_plot_mut(df2, name = mut_name, save = True)
+'''Visualisation of pairwise/triplet fits using combined modifiers'''
+import time
+def Visualise_combo_mut_fit(mutants:list):
+    '''Takes 2 or 3 mutants in a list and plots them to the data, enter mutants as follows [Output/Sensor/Regulator[1-10]]'''
+
+    random_params = param_dist.rvs(size=1, random_state=rndint+timeseed)
+    if len(mutants) == 2:
+        mut1 = mutants[0]
+        mut2 = mutants[1]
+
+        rndint = np.random.randint(low=0, high=1e7)
+        timeseed = time.time_ns() % 2**16
+        np.random.seed(rndint+timeseed)
+        seed(rndint+timeseed)
+
+        #WT params
+        path = '../data/smc_hill/pars_final.out'
+        WT_converged_params = Out_to_DF_hill(path, model_hill, mut_name= "", all = False)
+        param_dist = multivariate_dis(WT_converged_params,13)
+        WT_pars_array = param_dist.rvs(size=50, random_state=rndint+timeseed)
+
+        #mutant1 modifiers
+        path = f'../data/smc_SM_hill/{mut1}_smc/pars_final.out'  #only modifiers
+        df1 = Out_to_DF_hill(path, model_hill.model_muts, mut1, all=False)
+        MD1 = multivariate_dis(df1)
+        mut1_pars_array = MD1.rvs(size=50, random_state=rndint+timeseed)
+
+        #mutant2 modifiers
+        path2 = f'../data/smc_SM_hill/{mut2}_smc/pars_final.out'  #only modifiers
+        df2 = Out_to_DF_hill(path2, model_hill.model_muts, mut2, all=False)
+        MD2 = multivariate_dis(df2)
+        mut2_pars_array = MD2.rvs(size=50, random_state=rndint+timeseed)
+
+        #plot pairwise fit
+        #selects mutant shortcode and assembles into correct mutant ID
+        for i in range(0,10):
+            if mut1.endswith(f'{i}'):
+                if i == 0:
+                    pair1 = f'{mut1[0]}1{i}'
+                else:
+                    pair1 = f'{mut1[0]}{i}'
+
+            if mut2.endswith(f'{i}'):
+                if i == 0:
+                    pair2 = f'{mut2[0]}1{i}'
+                else:
+                    pair2 = f'{mut2[0]}{i}'
+        
+
+        
+        pairwise = f'{pair1}_{pair2}'
+        #need to make more ifelse statements to reorganise pairwise name.
+
+        #need to access meta_dict to select low, med and high values
+
+        # alpha = []
+        # for items in meta_dict['DM']:
+        #     if items['genotype'] == 'R1_O1' & items['inducer level'] == 'low':
+        #     alpha.append(items['obs_fluo_mean'])
+        # alpha
+
+
+
+
+        #plot mutant fits
+        hill=model_hill(params_list=[1]*13,I_conc=meta_dict["WT"].S)
+        for WT_pars,Mut1_pars,Mut2_pars in zip(WT_pars_array,mut1_pars_array,mut2_pars_array):
+            #identification of mutant types
+            if mut1.startswith('Sensor') & mut2.startswith('Output'):
+                M = {'As':Mut1_pars[0],'Bs':Mut1_pars[1],'Cs':Mut1_pars[2],'Ns':Mut1_pars[3],'Ar':0.0,'Br':0.0,'Cr':0.0,'Nr':0.0,'Ao':Mut2_pars[0],'Bo':Mut2_pars[1],'Co':Mut2_pars[2],'No':Mut2_pars[3],'Fo':Mut2_pars[4]}
+            elif mut1.startswith('Sensor') & mut2.startswith('Regulator'):
+                M = {'As':Mut1_pars[0],'Bs':Mut1_pars[1],'Cs':Mut1_pars[2],'Ns':Mut1_pars[3],'Ar':Mut2_pars[0],'Br':Mut2_pars[1],'Cr':Mut2_pars[2],'Nr':Mut2_pars[3],'Ao':0.0,'Bo':0.0,'Co':0.0,'No':0.0,'Fo':0.0}
+            elif mut1.startswith('Regulator') & mut2.startswith('Output'):
+                M = {'As':0.0,'Bs':0.0,'Cs':0.0,'Ns':0.0,'Ar':Mut1_pars[0],'Br':Mut1_pars[1],'Cr':Mut1_pars[2],'Nr':Mut1_pars[3],'Ao':Mut2_pars[0],'Bo':Mut2_pars[1],'Co':Mut2_pars[2],'No':Mut2_pars[3],'Fo':Mut2_pars[4]}
+            elif mut1.startswith('Regulator') & mut2.startswith('Sensor'):
+                M = {'As':Mut2_pars[0],'Bs':Mut2_pars[1],'Cs':Mut2_pars[2],'Ns':Mut2_pars[3],'Ar':Mut1_pars[1],'Br':Mut1_pars[1],'Cr':Mut1_pars[1],'Nr':Mut1_pars[1],'Ao':0.0,'Bo':0.0,'Co':0.0,'No':0.0,'Fo':0.0}
+            elif mut1.startswith('Output') & mut2.startswith('Regulator'):
+                M = {'As':0.0,'Bs':0.0,'Cs':0.0,'Ns':0.0,'Ar':Mut2_pars[0],'Br':Mut2_pars[1],'Cr':Mut2_pars[2],'Nr':Mut2_pars[3],'Ao':Mut1_pars[0],'Bo':Mut1_pars[1],'Co':Mut1_pars[2],'No':Mut1_pars[3],'Fo':Mut1_pars[4]}
+            elif mut1.startswith('Output') & mut2.startswith('Sensor'):
+                M = {'As':Mut2_pars[0],'Bs':Mut2_pars[1],'Cs':Mut2_pars[2],'Ns':Mut2_pars[3],'Ar':0.0,'Br':0.0,'Cr':0.0,'Nr':0.0,'Ao':Mut1_pars[0],'Bo':Mut1_pars[1],'Co':Mut1_pars[2],'No':Mut1_pars[3],'Fo':Mut1_pars[4]}
+            else:
+                raise KeyError('Mutant names invalid 212')
+            par_dict = {
+                "A_s":WT_pars[0],
+                "B_s":WT_pars[1],
+                "C_s":WT_pars[2],
+                "N_s":WT_pars[3],
+                "MA_s":M['As'],
+                "MB_s":M['Bs'],
+                "MC_s":M['Cs'],
+                "MN_s":M[4], #changed to log
+                "A_r":WT_pars[4],
+                "B_r":WT_pars[5],
+                "C_r":WT_pars[6],
+                "N_r":WT_pars[7],
+                "MA_r":M['Ar'],
+                "MB_r":M['Br'],
+                "MC_r":M['Cr'],
+                "MN_r":M['Nr'],
+                "A_o":WT_pars[8],
+                "B_o":WT_pars[9],
+                "C_o":WT_pars[10],
+                "N_o":WT_pars[11],
+                "F_o":WT_pars[12],
+                "MA_o":M['Ao'],
+                "MB_o":M['Bo'],
+                "MC_o":M['Co'],
+                "MN_o":M['No'],
+                "MF_o":M['Fo'],
+                    }
+            
+            par_list = list(par_dict.values())
+
+            Sensor_est_array,Regulator_est_array,Output_est_array, Stripe_est_array = hill.model_muts(I_conc=data_.S,params_list=par_list)
+
+
+
+            
+
+
+
+    elif len(mutants) == 3:
+        mut1 = mutants[0]
+        mut2 = mutants[1]
+        mut3 = mutants[2]
+    else:
+        raise KeyError('incorrect number of mutants, must be 2 or 3')
+
+
+
 # %%

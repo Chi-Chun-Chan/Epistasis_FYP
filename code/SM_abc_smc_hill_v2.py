@@ -56,30 +56,30 @@ parlistR: List[Dict[str, Union[str, float]]] = [{
     'upper_limit': 3.0
 }] 
 
-parlistO: List[Dict[str, Union[str, float]]] = [ {
+parlistO: List[Dict[str, Union[str, float]]] = [{
     'name': 'log_MA_o',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'lower_limit':-3.0,
+    'upper_limit':3.0
 }, {
     'name': 'log_MB_o',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'lower_limit':-3.0,
+    'upper_limit':3.0
 }, {
     'name': 'log_MC_o',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'lower_limit':-3.0,
+    'upper_limit':3.0
 }, {
     'name': 'MN_o',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'lower_limit':-3.0,
+    'upper_limit':3.0
 }, {
     'name': 'MF_o',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'lower_limit':-3.0,
+    'upper_limit':3.0
 }] 
 
 def score_wrapper_S(log_MA_s: float, log_MB_s: float, log_MC_s: float,
-                     MN_s: float) -> float:
+                     log_MN_s: float) -> float:
     """Wrapper function two-inducer model, to be called by the optimiser."""
     #pylint: disable=too-many-arguments
 
@@ -104,7 +104,7 @@ def score_wrapper_S(log_MA_s: float, log_MB_s: float, log_MC_s: float,
     "MA_s":10**log_MA_s,
     "MB_s":10**log_MB_s,
     "MC_s":10**log_MC_s,
-    "MN_s":MN_s,
+    "MN_s":10**log_MN_s, #changed to log
     "A_r":10**random_params[4],
     "B_r":10**random_params[5],
     "C_r":10**random_params[6],
@@ -121,8 +121,8 @@ def score_wrapper_S(log_MA_s: float, log_MB_s: float, log_MC_s: float,
     "MA_o":10**0.0,
     "MB_o":10**0.0,
     "MC_o":10**0.0,
-    "MN_o":1.0,
-    "MF_o":1.0,
+    "MN_o":10**0.0,
+    "MF_o":10**0.0,
         }
 
     par_list = list(par_dict.values()) 
@@ -131,7 +131,7 @@ def score_wrapper_S(log_MA_s: float, log_MB_s: float, log_MC_s: float,
     return par_list
 
 def score_wrapper_R(log_MA_r: float, log_MB_r: float, log_MC_r: float,
-                     MN_r: float) -> float:
+                     log_MN_r: float) -> float:
     """Wrapper function two-inducer model, to be called by the optimiser."""
     rndint = np.random.randint(low=0, high=1e7)
     
@@ -148,7 +148,7 @@ def score_wrapper_R(log_MA_r: float, log_MB_r: float, log_MC_r: float,
     "MA_s":10**0.0,
     "MB_s":10**0.0,
     "MC_s":10**0.0,
-    "MN_s":1.0,
+    "MN_s":10**0.0,
     "A_r":10**random_params[4],
     "B_r":10**random_params[5],
     "C_r":10**random_params[6],
@@ -156,7 +156,7 @@ def score_wrapper_R(log_MA_r: float, log_MB_r: float, log_MC_r: float,
     "MA_r":10**log_MA_r,
     "MB_r":10**log_MB_r,
     "MC_r":10**log_MC_r,
-    "MN_r":MN_r,
+    "MN_r":10**log_MN_r,
     "A_o":10**random_params[8],
     "B_o":10**random_params[9],
     "C_o":10**random_params[10],
@@ -165,8 +165,8 @@ def score_wrapper_R(log_MA_r: float, log_MB_r: float, log_MC_r: float,
     "MA_o":10**0.0,
     "MB_o":10**0.0,
     "MC_o":10**0.0,
-    "MN_o":1.0,
-    "MF_o":1.0,
+    "MN_o":10**0.0,
+    "MF_o":10**0.0,
         }
 
     par_list = list(par_dict.values()) 
@@ -175,7 +175,7 @@ def score_wrapper_R(log_MA_r: float, log_MB_r: float, log_MC_r: float,
     return par_list
 
 def score_wrapper_O(log_MA_o: float, log_MB_o: float, log_MC_o: float,
-                     MN_o: float, MF_o:float) -> float:
+                     log_MN_o: float, log_MF_o:float) -> float:
     """Wrapper function two-inducer model, to be called by the optimiser."""
     rndint = np.random.randint(low=0, high=1e7)
     
@@ -192,7 +192,7 @@ def score_wrapper_O(log_MA_o: float, log_MB_o: float, log_MC_o: float,
     "MA_s":10**0.0,
     "MB_s":10**0.0,
     "MC_s":10**0.0,
-    "MN_s":1.0,
+    "MN_s":10**0.0,
     "A_r":10**random_params[4],
     "B_r":10**random_params[5],
     "C_r":10**random_params[6],
@@ -200,7 +200,7 @@ def score_wrapper_O(log_MA_o: float, log_MB_o: float, log_MC_o: float,
     "MA_r":10**0.0,
     "MB_r":10**0.0,
     "MC_r":10**0.0,
-    "MN_r":1.0,
+    "MN_r":10**0.0,
     "A_o":10**random_params[8],
     "B_o":10**random_params[9],
     "C_o":10**random_params[10],
@@ -209,8 +209,8 @@ def score_wrapper_O(log_MA_o: float, log_MB_o: float, log_MC_o: float,
     "MA_o":10**log_MA_o,
     "MB_o":10**log_MB_o,
     "MC_o":10**log_MC_o,
-    "MN_o":MN_o,
-    "MF_o":MF_o,
+    "MN_o":10**log_MN_o,
+    "MF_o":10**log_MF_o,
     }
 
     par_list = list(par_dict.values()) 
@@ -415,6 +415,8 @@ def generate_parametrisation(name, data,
                         par_list = score_wrapper_O(*proposed_pars)
                         current_dist = RSS_Score(param_list= par_list, model_type=model_hill, data_=data, model_specs= 'model_muts')
                         evaluated_distances.append(current_dist)
+            else:
+                raise KeyError('Mutant name not recognised')
             
             
 
@@ -453,6 +455,8 @@ def generate_parametrisation(name, data,
                         par_list = score_wrapper_O(*proposed_pars)
                         current_dist = RSS_Score(param_list= par_list, model_type=model_hill, data_=data, model_specs= 'model_muts')
                         evaluated_distances.append(current_dist)
+            else:
+                raise KeyError('Mutant name not recognised')
 
             # if evaluate_parametrisation(proposed_pars) > 0:
             #     # if so, store the distance/"score" of it
@@ -487,6 +491,8 @@ def generate_parametrisation(name, data,
             current_weight = evaluate_parametrisationR(proposed_pars) / sum_denom    
         elif name.startswith("Output"):
             current_weight = evaluate_parametrisationO(proposed_pars) / sum_denom
+        else:
+                raise KeyError('Mutant name not recognised in weight calc')
 
     # Return the proposed parametrisation, its distance, its weight
     # and all the distances we encountered on our way there.
@@ -549,7 +555,7 @@ def generate_parametrisations(name, data, prev_parametrisations=None,
 
 def sequential_abc(name_, data_,
                    initial_dist: float = 1000.0,
-                   final_dist: float = 0.1,
+                   final_dist: float = 0.10,
                    n_pars: int = 1000,
                    prior_label: Optional[int] = None,): #Takes name of mutant and data of mutants
     """ The main function. The sequence of acceptance thresholds starts
@@ -655,6 +661,8 @@ for i in SM_names[mutant_range]:
             sequential_abc(name_=SM_mutant_of_interest, data_=SM_df)
     elif SM_mutant_of_interest.startswith("Output"):
             sequential_abc(name_=SM_mutant_of_interest, data_=SM_df)
+    else:
+                raise KeyError('Mutant name not recognised')
             
     print("\n time elapsed for this mutant \n",)
     print("--- %s seconds ---" % (time.time() - start_time_per_mutant))

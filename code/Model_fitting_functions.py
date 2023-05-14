@@ -603,9 +603,11 @@ from scipy.stats import multivariate_normal
 import numpy as np
 import pandas as pd
 
-def multivariate_dis(df,params:int):
+def multivariate_dis(df):
+    '''input a dataframe of parameters(cols) and values(rows)'''
     #convert df into matrix
     names = df.keys()
+    params = len(df.columns)
     matrix = np.empty(shape=(params,1000), dtype=float)
     i = 0
     for name in names:

@@ -209,7 +209,7 @@ class model_hill:
         Regulator = (MB_r*B_r)/(1+np.power((MC_r*C_r)*Sensor,(MN_r*N_r)))
         Regulator += (MA_r*A_r)
 
-        Output_half = (MB_o*B_o)/(1+np.power((MC_o*C_o)*Sensor,(N_o*MN_o)))
+        Output_half = (MB_o*B_o)/(1+np.power((MC_o*C_o)*Sensor,(MN_o*N_o)))
         Output_half += (MA_o*A_o)
 
         Output = (MA_o*A_o) + (MB_o*B_o)/(1+np.power((MC_o*C_o)*(Sensor+Regulator),(MN_o*N_o)))
