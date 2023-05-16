@@ -18,65 +18,67 @@ from RSS_Scoring import *
 #Insert wildtype parameter distribution information.
 path = '../data/smc_hill/pars_final.out'
 WT_converged_params = Out_to_DF_hill(path, model_hill, mut_name= "", all = False)
-param_dist = multivariate_dis(WT_converged_params,13)
+param_dist = multivariate_dis(WT_converged_params)
 #Define list of parameters
 parlistS: List[Dict[str, Union[str, float]]] = [{
     'name': 'log_MA_s',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'lower_limit': -2.0,
+    'upper_limit': 2.0
 }, {
     'name': 'log_MB_s',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'lower_limit': -2.0,
+    'upper_limit': 2.0
 }, {
     'name': 'log_MC_s',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'lower_limit': -1.0,
+    'upper_limit': 1.0
 }, {
-    'name': 'MN_s',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'name': 'log_MN_s',
+    'lower_limit': -1.0,
+    'upper_limit': 1.0
 }] 
 
 parlistR: List[Dict[str, Union[str, float]]] = [{
     'name': 'log_MA_r',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'lower_limit': -2.0,
+    'upper_limit': 2.0
 }, {
     'name': 'log_MB_r',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'lower_limit': -2.0,
+    'upper_limit': 2.0
 }, {
     'name': 'log_MC_r',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'lower_limit': -1.0,
+    'upper_limit': 1.0
 }, {
-    'name': 'MN_r',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'name': 'log_MN_r',
+    'lower_limit': -1.0,
+    'upper_limit': 1.0
 }] 
 
 parlistO: List[Dict[str, Union[str, float]]] = [{
     'name': 'log_MA_o',
-    'lower_limit':-3.0,
-    'upper_limit':3.0
+    'lower_limit':-2.0,
+    'upper_limit':2.0
 }, {
     'name': 'log_MB_o',
-    'lower_limit':-3.0,
-    'upper_limit':3.0
+    'lower_limit':-2.0,
+    'upper_limit':2.0
 }, {
     'name': 'log_MC_o',
-    'lower_limit':-3.0,
-    'upper_limit':3.0
+    'lower_limit':-1.0,
+    'upper_limit':1.0
 }, {
-    'name': 'MN_o',
-    'lower_limit':-3.0,
-    'upper_limit':3.0
-}, {
-    'name': 'MF_o',
-    'lower_limit':-3.0,
-    'upper_limit':3.0
+    'name': 'log_MN_o',
+    'lower_limit':-1.0,
+    'upper_limit':1.0
 }] 
+
+# {
+#     'name': 'log_MF_o',
+#     'lower_limit':-3.0,
+#     'upper_limit':3.0
+# }
 
 def score_wrapper_S(log_MA_s: float, log_MB_s: float, log_MC_s: float,
                      log_MN_s: float) -> float:
@@ -103,7 +105,7 @@ def score_wrapper_S(log_MA_s: float, log_MB_s: float, log_MC_s: float,
     "N_s":random_params[3],
     "MA_s":10**log_MA_s,
     "MB_s":10**log_MB_s,
-    "MC_s":10**log_MC_s,
+    "MC_s":10**log_MC_s, #might be fucking up sensor
     "MN_s":10**log_MN_s, #changed to log
     "A_r":10**random_params[4],
     "B_r":10**random_params[5],
@@ -175,7 +177,7 @@ def score_wrapper_R(log_MA_r: float, log_MB_r: float, log_MC_r: float,
     return par_list
 
 def score_wrapper_O(log_MA_o: float, log_MB_o: float, log_MC_o: float,
-                     log_MN_o: float, log_MF_o:float) -> float:
+                     log_MN_o: float) -> float:
     """Wrapper function two-inducer model, to be called by the optimiser."""
     rndint = np.random.randint(low=0, high=1e7)
     
@@ -210,7 +212,7 @@ def score_wrapper_O(log_MA_o: float, log_MB_o: float, log_MC_o: float,
     "MB_o":10**log_MB_o,
     "MC_o":10**log_MC_o,
     "MN_o":10**log_MN_o,
-    "MF_o":10**log_MF_o,
+    "MF_o":10**0.0
     }
 
     par_list = list(par_dict.values()) 
@@ -644,7 +646,7 @@ def sequential_abc(name_, data_,
 #mutant_range:slice=slice(0,len(SM_names)) 
 
 #Regulator only
-mutant_range:slice=slice(10,len(SM_names))
+mutant_range:slice=slice(0,len(SM_names)-10)
 
 for i in SM_names[mutant_range]: 
     SM_mutant_of_interest=i

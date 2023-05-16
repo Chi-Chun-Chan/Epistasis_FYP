@@ -24,7 +24,7 @@ path = '../data/smc_hill/pars_final.out'
 
 WT_converged_params = Out_to_DF_hill(path, model_hill.model, '', all = False)
 
-param_dist = multivariate_dis(WT_converged_params, 13)
+param_dist = multivariate_dis(WT_converged_params)
 
 WT = 'Wildtype'
 Paired_Density_plot(WT_converged_params, name = WT, save=True)
@@ -83,12 +83,42 @@ converged_params_list_hill=get_WT_params(model_type=func,start_guess=params_hill
 #Visualising parameter distribution
 from Plotting_functions import *
 from RSS_Scoring import *
-def Visualise_SM_fit(mut_name, iter, plot_num):
+import time
+from random import seed
+
+def WT_score_wrapper(log_A_s: float, log_B_s: float, log_C_s: float,
+                     N_s: float, log_A_r: float, log_B_r: float, log_C_r: float,
+                     N_r: float, log_A_o: float, log_B_o: float, log_C_o: float,
+                     N_o: float, F_o:float) -> float:
+    """Intakes a list of parameters and generates a dictionary to be score"""
+    #pylint: disable=too-many-arguments
+
+    # Make a parameter dictionary, converting the log-spaced system params
+    par_dict = {
+        "A_s":10**log_A_s,
+        "B_s":10**log_B_s,
+        "C_s":10**log_C_s,
+        "N_s":N_s,
+        "A_r":10**log_A_r,
+        "B_r":10**log_B_r,
+        "C_r":10**log_C_r,
+        "N_r":N_r,
+        "A_o":10**log_A_o,
+        "B_o":10**log_B_o,
+        "C_o":10**log_C_o,
+        "N_o":N_o,
+        "F_o":F_o
+    }
+    par_list = list(par_dict.values())
+
+    return par_list
+def Visualise_SM_fit(mut_name, iter, plot_num, save:bool):
     '''Looking at the general fits to data'''
     path = f'../data/smc_SM_hill/{mut_name}_smc/all_pars_{iter}.out'  #iter = final
     path2 = f'../data/smc_SM_hill/{mut_name}_smc/pars_{iter}.out'  #only modifiers
     df = Out_to_DF_hill(path, model_hill.model_muts, mut_name, all=True)
 
+    data=meta_dict['WT']
     SM_df = get_data_SM(mut_name)
     data_ = SM_df
     hill=model_hill(params_list=[1]*13,I_conc=meta_dict["WT"].S)
@@ -111,10 +141,28 @@ def Visualise_SM_fit(mut_name, iter, plot_num):
     Sensor.set_yscale('log')
     Sensor.set_title(r'inducer -> sensor (GFP output)')
 
+    
     #Sets up a parameter set array
+    np.random.seed(0)  
+
+    set_list = []
+    
     par_array = np.empty([plot_num,26])
     for i in range(1,plot_num+1):
-        row_list = df.loc[i].values.flatten().tolist()
+        #selects 50 random unique parameter sets
+        rndint = np.random.randint(low=0, high=1e7)
+        timeseed = time.time_ns() % 2**16
+        np.random.seed(rndint+timeseed)
+        seed(rndint+timeseed)
+        rand = np.random.randint(low=0, high=1000)
+        check = set_list.count(rand)
+        while check > 0:
+            rand = np.random.randint(low=0, high=1000)
+            check = set_list.count(rand)
+            if check == 0:
+                break
+        set_list.append(rand)
+        row_list = df.loc[rand].values.flatten().tolist()
         #convert back to normal
         par_array[i-1] = row_list
 
@@ -132,8 +180,9 @@ def Visualise_SM_fit(mut_name, iter, plot_num):
         Output.plot(data_.S, Output_est_array, alpha = 0.1, c = 'purple')
         Regulator.plot(data_.S, Regulator_est_array,alpha = 0.1, c = 'blue')
         Sensor.plot(data_.S, Sensor_est_array, alpha = 0.1, c = 'red')
-
-        score_list.append(RSS_Score(par_array[i],model_hill,data_,model_specs='model_muts'))
+        
+        s = RSS_Score(par_array[i],model_hill,data_,model_specs='model_muts')
+        score_list.append(round(s,3))
 
     # Sensor_est_array,Regulator_est_array,Output_est_array, Stripe_est_array = hill.model_muts(I_conc=data_.S,params_list=mean_params)
     # Stripe.plot(data_.S, Stripe_est_array, alpha = 0.1, c = 'black')
@@ -142,31 +191,53 @@ def Visualise_SM_fit(mut_name, iter, plot_num):
     # Sensor.plot(data_.S, Sensor_est_array, alpha = 0.1, c = 'black')
     # return fig, score_list, par_array
 
+    path = '../data/smc_hill/pars_final.out'
+    WT_converged_params = Out_to_DF_hill(path, model_hill, mut_name= "", all = False)
+    WT_dist = multivariate_dis(WT_converged_params)
+    WT_params = list(WT_dist.rvs(size = 1, random_state=rndint+timeseed))
+    WT_params = WT_score_wrapper(*WT_params)
+
+    #plot wildtype for comparison, its random tho so how to represent it best
+    # Sensor_array,Regulator_array,Output_array, Stripe_array = hill.model(I_conc=data_.S,params_list=WT_params)
+
+    # Stripe.plot(data.S, Stripe_array, alpha = 0.7, c = 'black')
+    # Output.plot(data.S, Output_array, alpha = 0.7, c = 'black')
+    # Regulator.plot(data.S, Regulator_array,alpha = 0.7, c = 'black')
+    # Sensor.plot(data.S, Sensor_array, alpha = 0.7, c = 'black')
+
+
+
 #need to figure out whats wrong with model muts and why its producing dog shit
     fig.suptitle(f'{mut_name} Mutant Fitting with {plot_num} parameter sets')
-    plt.savefig(f'../results/{mut_name}_SM_fit.pdf', format="pdf", bbox_inches="tight")
+    txt = f'Param set-list from all_pars_{iter}: \n'
+    txt+=str(set_list)
+    txt2 = f'Corresponding RSS: \n'
+    txt2+=str(score_list)
+    fig.text(0,-.1,txt,wrap=True, fontsize=6)
+    fig.text(0,-.2,txt2,wrap=True, fontsize=6)
+    if save == True:
+        plt.savefig(f'../results/{mut_name}_SM_fit.pdf', format="pdf", bbox_inches="tight")
 
-    return fig, score_list
+    return fig, score_list, set_list
 
-
-fig, scores = Visualise_SM_fit(mut_name='Regulator1', iter = 'final', plot_num = 50)
-print(scores)
-
-def Visualise_SM_par_dis(mut_name, iter):
+def Visualise_SM_par_dis(mut_name, iter, saves:bool):
     path2 = f'../data/smc_SM_hill/{mut_name}_smc/pars_{iter}.out'  #only modifiers
     df2 = Out_to_DF_hill(path2, model_hill.model_muts, mut_name, all=False)
     
-    return Paired_Density_plot_mut(df2, name = mut_name, save = True)
+    return Paired_Density_plot_mut(df2, name = mut_name, save = saves)
 
-Visualise_SM_par_dis(mut_name='Regulator1', iter = 'final')
+#put a mutant name and the final or last SMC step
+mut = 'Regulator2'
+num = 'final'
+fig, scores, set_list = Visualise_SM_fit(mut_name=mut, iter = num, plot_num = 50, save = True)
+
+Visualise_SM_par_dis(mut_name= mut, iter = num, saves = True)
 
 # %%
 '''Visualisation of pairwise/triplet fits using combined modifiers'''
 import time
 def Visualise_combo_mut_fit(mutants:list):
     '''Takes 2 or 3 mutants in a list and plots them to the data, enter mutants as follows [Output/Sensor/Regulator[1-10]]'''
-
-    random_params = param_dist.rvs(size=1, random_state=rndint+timeseed)
     if len(mutants) == 2:
         mut1 = mutants[0]
         mut2 = mutants[1]
@@ -176,23 +247,44 @@ def Visualise_combo_mut_fit(mutants:list):
         np.random.seed(rndint+timeseed)
         seed(rndint+timeseed)
 
+        size = 100
+
         #WT params
         path = '../data/smc_hill/pars_final.out'
         WT_converged_params = Out_to_DF_hill(path, model_hill, mut_name= "", all = False)
-        param_dist = multivariate_dis(WT_converged_params,13)
-        WT_pars_array = param_dist.rvs(size=50, random_state=rndint+timeseed)
+        data = meta_dict['WT']
+        param_dist = multivariate_dis(WT_converged_params)
+        WT_pars_array = param_dist.rvs(size=size, random_state=rndint+timeseed)
 
         #mutant1 modifiers
         path = f'../data/smc_SM_hill/{mut1}_smc/pars_final.out'  #only modifiers
         df1 = Out_to_DF_hill(path, model_hill.model_muts, mut1, all=False)
         MD1 = multivariate_dis(df1)
-        mut1_pars_array = MD1.rvs(size=50, random_state=rndint+timeseed)
+        mut1_pars_array = MD1.rvs(size=size, random_state=rndint+timeseed)
 
         #mutant2 modifiers
-        path2 = f'../data/smc_SM_hill/{mut2}_smc/pars_final.out'  #only modifiers
+        path2 = f'../data/smc_SM_hill/{mut2}_smc/pars_final.out'  #change final if needed
         df2 = Out_to_DF_hill(path2, model_hill.model_muts, mut2, all=False)
         MD2 = multivariate_dis(df2)
-        mut2_pars_array = MD2.rvs(size=50, random_state=rndint+timeseed)
+        mut2_pars_array = MD2.rvs(size=size, random_state=rndint+timeseed)
+
+        WT_median_store = np.empty(shape=(size,len(WT_converged_params.columns)))
+        WT_median = np.empty(shape=(1,len(WT_converged_params.columns)))
+
+        for object in WT_pars_array:
+            for i in range(0,len(WT_converged_params.columns)):
+                
+                WT_median_store[i].append(object[i])
+        
+        for i in range(0,len(WT_converged_params.columns)):
+            WT_median[i] = median(WT_median_store[i])
+
+
+
+             
+
+
+
 
         #plot pairwise fit
         #selects mutant shortcode and assembles into correct mutant ID
@@ -208,87 +300,473 @@ def Visualise_combo_mut_fit(mutants:list):
                     pair2 = f'{mut2[0]}1{i}'
                 else:
                     pair2 = f'{mut2[0]}{i}'
+
+        DM_df = meta_dict['DM']
+
+        #All mutants are in order of R_S_O
+
+        if pair1.startswith('R') | pair1.startswith('S'):
+
+            pair_mut_dict = DM_df.loc[DM_df['genotype'].str.contains(pair1)]
+            if pair1.endswith('1'):
+                pair_mut_dict = pair_mut_dict.loc[DM_df['genotype'].str.contains('1_')]
+        elif pair1.startswith('O'):
+            pair_mut_dict = DM_df.loc[DM_df['genotype'].str.contains(pair1)]
+
+            if pair1.endswith('1'):
+                pair_mut_dict = pair_mut_dict.loc[pair_mut_dict['genotype'].str.endswith('1')]
+                #incase pair ends with a 1 and 10 is included
+        
+        if pair2.startswith('R') | pair2.startswith('S'):
+
+            pair_mut_dict = pair_mut_dict.loc[pair_mut_dict['genotype'].str.contains(pair2)]
+            if pair2.endswith('1'):
+                pair_mut_dict = pair_mut_dict.loc[pair_mut_dict['genotype'].str.contains('1_')]
+        elif pair2.startswith('O'):
+            pair_mut_dict = pair_mut_dict.loc[pair_mut_dict['genotype'].str.contains['genotype'].str.contains(pair2)]
+
+            if pair2.endswith('1'):
+                pair_mut_dict = pair_mut_dict.loc[pair_mut_dict['genotype'].str.endswith('1')]
         
 
-        
-        pairwise = f'{pair1}_{pair2}'
-        #need to make more ifelse statements to reorganise pairwise name.
-
-        #need to access meta_dict to select low, med and high values
-
-        # alpha = []
-        # for items in meta_dict['DM']:
-        #     if items['genotype'] == 'R1_O1' & items['inducer level'] == 'low':
-        #     alpha.append(items['obs_fluo_mean'])
-        # alpha
+        pairwise_fluo = []
+        for fluo in pair_mut_dict['obs_fluo_mean']:
+            pairwise_fluo.append(fluo)
 
 
+        pairwise_inducer = [0.00001, 0.0002, 0.2]
 
+        ind = pd.DataFrame(pairwise_inducer)
+
+
+        plt.plot(pairwise_inducer,pairwise_fluo)
+        plt.scatter(pairwise_inducer,pairwise_fluo)
+        plt.xscale('log')
+        plt.yscale('log')
 
         #plot mutant fits
         hill=model_hill(params_list=[1]*13,I_conc=meta_dict["WT"].S)
         for WT_pars,Mut1_pars,Mut2_pars in zip(WT_pars_array,mut1_pars_array,mut2_pars_array):
             #identification of mutant types
             if mut1.startswith('Sensor') & mut2.startswith('Output'):
-                M = {'As':Mut1_pars[0],'Bs':Mut1_pars[1],'Cs':Mut1_pars[2],'Ns':Mut1_pars[3],'Ar':0.0,'Br':0.0,'Cr':0.0,'Nr':0.0,'Ao':Mut2_pars[0],'Bo':Mut2_pars[1],'Co':Mut2_pars[2],'No':Mut2_pars[3],'Fo':Mut2_pars[4]}
+                M = {'As':Mut1_pars[0],'Bs':Mut1_pars[1],'Cs':Mut1_pars[2],'Ns':Mut1_pars[3],'Ar':0.0,'Br':0.0,'Cr':0.0,'Nr':0.0,'Ao':Mut2_pars[0],'Bo':Mut2_pars[1],'Co':Mut2_pars[2],'No':Mut2_pars[3],'Fo':0.0}
             elif mut1.startswith('Sensor') & mut2.startswith('Regulator'):
                 M = {'As':Mut1_pars[0],'Bs':Mut1_pars[1],'Cs':Mut1_pars[2],'Ns':Mut1_pars[3],'Ar':Mut2_pars[0],'Br':Mut2_pars[1],'Cr':Mut2_pars[2],'Nr':Mut2_pars[3],'Ao':0.0,'Bo':0.0,'Co':0.0,'No':0.0,'Fo':0.0}
             elif mut1.startswith('Regulator') & mut2.startswith('Output'):
-                M = {'As':0.0,'Bs':0.0,'Cs':0.0,'Ns':0.0,'Ar':Mut1_pars[0],'Br':Mut1_pars[1],'Cr':Mut1_pars[2],'Nr':Mut1_pars[3],'Ao':Mut2_pars[0],'Bo':Mut2_pars[1],'Co':Mut2_pars[2],'No':Mut2_pars[3],'Fo':Mut2_pars[4]}
+                M = {'As':0.0,'Bs':0.0,'Cs':0.0,'Ns':0.0,'Ar':Mut1_pars[0],'Br':Mut1_pars[1],'Cr':Mut1_pars[2],'Nr':Mut1_pars[3],'Ao':Mut2_pars[0],'Bo':Mut2_pars[1],'Co':Mut2_pars[2],'No':Mut2_pars[3],'Fo':0.0}
             elif mut1.startswith('Regulator') & mut2.startswith('Sensor'):
                 M = {'As':Mut2_pars[0],'Bs':Mut2_pars[1],'Cs':Mut2_pars[2],'Ns':Mut2_pars[3],'Ar':Mut1_pars[1],'Br':Mut1_pars[1],'Cr':Mut1_pars[1],'Nr':Mut1_pars[1],'Ao':0.0,'Bo':0.0,'Co':0.0,'No':0.0,'Fo':0.0}
             elif mut1.startswith('Output') & mut2.startswith('Regulator'):
-                M = {'As':0.0,'Bs':0.0,'Cs':0.0,'Ns':0.0,'Ar':Mut2_pars[0],'Br':Mut2_pars[1],'Cr':Mut2_pars[2],'Nr':Mut2_pars[3],'Ao':Mut1_pars[0],'Bo':Mut1_pars[1],'Co':Mut1_pars[2],'No':Mut1_pars[3],'Fo':Mut1_pars[4]}
+                M = {'As':0.0,'Bs':0.0,'Cs':0.0,'Ns':0.0,'Ar':Mut2_pars[0],'Br':Mut2_pars[1],'Cr':Mut2_pars[2],'Nr':Mut2_pars[3],'Ao':Mut1_pars[0],'Bo':Mut1_pars[1],'Co':Mut1_pars[2],'No':Mut1_pars[3],'Fo':0.0}
             elif mut1.startswith('Output') & mut2.startswith('Sensor'):
-                M = {'As':Mut2_pars[0],'Bs':Mut2_pars[1],'Cs':Mut2_pars[2],'Ns':Mut2_pars[3],'Ar':0.0,'Br':0.0,'Cr':0.0,'Nr':0.0,'Ao':Mut1_pars[0],'Bo':Mut1_pars[1],'Co':Mut1_pars[2],'No':Mut1_pars[3],'Fo':Mut1_pars[4]}
+                M = {'As':Mut2_pars[0],'Bs':Mut2_pars[1],'Cs':Mut2_pars[2],'Ns':Mut2_pars[3],'Ar':0.0,'Br':0.0,'Cr':0.0,'Nr':0.0,'Ao':Mut1_pars[0],'Bo':Mut1_pars[1],'Co':Mut1_pars[2],'No':Mut1_pars[3],'Fo':0.0}
             else:
                 raise KeyError('Mutant names invalid 212')
             par_dict = {
-                "A_s":WT_pars[0],
-                "B_s":WT_pars[1],
-                "C_s":WT_pars[2],
+                "A_s":10**WT_pars[0],
+                "B_s":10**WT_pars[1],
+                "C_s":10**WT_pars[2],
                 "N_s":WT_pars[3],
-                "MA_s":M['As'],
-                "MB_s":M['Bs'],
-                "MC_s":M['Cs'],
-                "MN_s":M[4], #changed to log
-                "A_r":WT_pars[4],
-                "B_r":WT_pars[5],
-                "C_r":WT_pars[6],
+                "MA_s":10**M['As'],
+                "MB_s":10**M['Bs'],
+                "MC_s":10**M['Cs'],
+                "MN_s":10**M['Ns'], 
+                "A_r":10**WT_pars[4],
+                "B_r":10**WT_pars[5],
+                "C_r":10**WT_pars[6],
                 "N_r":WT_pars[7],
-                "MA_r":M['Ar'],
-                "MB_r":M['Br'],
-                "MC_r":M['Cr'],
-                "MN_r":M['Nr'],
-                "A_o":WT_pars[8],
-                "B_o":WT_pars[9],
-                "C_o":WT_pars[10],
+                "MA_r":10**M['Ar'],
+                "MB_r":10**M['Br'],
+                "MC_r":10**M['Cr'],
+                "MN_r":10**M['Nr'],
+                "A_o":10**WT_pars[8],
+                "B_o":10**WT_pars[9],
+                "C_o":10**WT_pars[10],
                 "N_o":WT_pars[11],
                 "F_o":WT_pars[12],
-                "MA_o":M['Ao'],
-                "MB_o":M['Bo'],
-                "MC_o":M['Co'],
-                "MN_o":M['No'],
-                "MF_o":M['Fo'],
+                "MA_o":10**M['Ao'],
+                "MB_o":10**M['Bo'],
+                "MC_o":10**M['Co'],
+                "MN_o":10**M['No'],
+                "MF_o":10**M['Fo'],
                     }
             
             par_list = list(par_dict.values())
 
-            Sensor_est_array,Regulator_est_array,Output_est_array, Stripe_est_array = hill.model_muts(I_conc=data_.S,params_list=par_list)
+            Sensor_est_array,Regulator_est_array,Output_est_array, Stripe_est_array = hill.model_muts(I_conc= ind,params_list=par_list)
 
+            plt.plot(ind, Stripe_est_array, c = 'green', alpha = 0.1)
+            plt.scatter(ind, Stripe_est_array, c = 'green', alpha = 0.1)
 
-
-            
-
-
-
+            plt.title(f'Pairwise mutant fit: {pair1}_{pair2}')
+    
     elif len(mutants) == 3:
         mut1 = mutants[0]
         mut2 = mutants[1]
         mut3 = mutants[2]
+
+        rndint = np.random.randint(low=0, high=1e7)
+        timeseed = time.time_ns() % 2**16
+        np.random.seed(rndint+timeseed)
+        seed(rndint+timeseed)
+
+        #WT params
+        path = '../data/smc_hill/pars_final.out'
+        WT_converged_params = Out_to_DF_hill(path, model_hill, mut_name= "", all = False)
+        data = meta_dict['WT']
+        param_dist = multivariate_dis(WT_converged_params)
+        WT_pars_array = param_dist.rvs(size=50, random_state=rndint+timeseed)
+
+        #mutant1 modifiers
+        path = f'../data/smc_SM_hill/{mut1}_smc/pars_final.out'  #only modifiers
+        df1 = Out_to_DF_hill(path, model_hill.model_muts, mut1, all=False)
+        MD1 = multivariate_dis(df1)
+        mut1_pars_array = MD1.rvs(size=50, random_state=rndint+timeseed)
+
+        #mutant2 modifiers
+        path2 = f'../data/smc_SM_hill/{mut2}_smc/pars_final.out'  #change final if needed
+        df2 = Out_to_DF_hill(path2, model_hill.model_muts, mut2, all=False)
+        MD2 = multivariate_dis(df2)
+        mut2_pars_array = MD2.rvs(size=50, random_state=rndint+timeseed)
+
+        #mutant3 modifiers
+        path3 = f'../data/smc_SM_hill/{mut3}_smc/pars_final.out'  #change final if needed
+        df3 = Out_to_DF_hill(path2, model_hill.model_muts, mut3, all=False)
+        MD3 = multivariate_dis(df3)
+        mut3_pars_array = MD3.rvs(size=50, random_state=rndint+timeseed)
+
+        #plot pairwise fit
+        #selects mutant shortcode and assembles into correct mutant ID
+        for i in range(0,10):
+            if mut1.endswith(f'{i}'):
+                if i == 0:
+                    trip1 = f'{mut1[0]}1{i}'
+                else:
+                    trip1 = f'{mut1[0]}{i}'
+
+            if mut2.endswith(f'{i}'):
+                if i == 0:
+                    trip2 = f'{mut2[0]}1{i}'
+                else:
+                    trip2 = f'{mut2[0]}{i}'
+            if mut3.endswith(f'{i}'):
+                if i == 0:
+                    trip3 = f'{mut3[0]}1{i}'
+                else:
+                    trip3 = f'{mut3[0]}{i}'
+
+        TM_df = meta_dict['TM']
+
+        if trip1.startswith('R') | trip1.startswith('S'):
+
+            trip_mut_dict = TM_df.loc[TM_df['genotype'].str.contains(trip1)]
+            if trip1.endswith('1'):
+                trip_mut_dict = trip_mut_dict.loc[trip_mut_dict['genotype'].str.contains('1_')]
+
+        elif trip1.startswith('O'):
+            trip_mut_dict = TM_df.loc[TM_df['genotype'].str.contains(trip1)]
+
+            if trip1.endswith('1'):
+                trip_mut_dict = trip_mut_dict.loc[trip_mut_dict['genotype'].str.endswith('1')]
+                #incase pair ends with a 1 and 10 is included
+        ####
+        if trip2.startswith('R') | trip2.startswith('S'):
+
+            trip_mut_dict = trip_mut_dict.loc[trip_mut_dict['genotype'].str.contains(trip2)]
+            if trip2.endswith('1'):
+                trip_mut_dict = trip_mut_dict.loc[trip_mut_dict['genotype'].str.contains('1_')]
+                
+        elif trip2.startswith('O'):
+            trip_mut_dict = trip_mut_dict.loc[trip_mut_dict['genotype'].str.contains(trip2)]
+
+            if trip2.endswith('1'):
+                trip_mut_dict = trip_mut_dict.loc[trip_mut_dict['genotype'].str.endswith('1')]
+                #incase pair ends with a 1 and 10 is included
+
+        if trip3.startswith('R') | trip3.startswith('S'):
+
+            trip_mut_dict = trip_mut_dict.loc[trip_mut_dict['genotype'].str.contains(trip3)]
+            if trip3.endswith('1'):
+                trip_mut_dict = trip_mut_dict.loc[trip_mut_dict['genotype'].str.contains('1_')]
+                
+        elif trip3.startswith('O'):
+            trip_mut_dict = trip_mut_dict.loc[trip_mut_dict['genotype'].str.contains(trip3)]
+
+            if trip3.endswith('1'):
+                trip_mut_dict = trip_mut_dict.loc[trip_mut_dict['genotype'].str.endswith('1')]
+                #incase pair ends with a 1 and 10 is included
+        
+
+        tripwise_fluo = []
+        for fluo in trip_mut_dict['obs_fluo_mean']:
+            tripwise_fluo.append(fluo)
+
+        tripwise_inducer = [0.00001, 0.0002, 0.2]
+
+        ind = pd.DataFrame(tripwise_inducer)
+
+
+        plt.plot(tripwise_inducer,tripwise_fluo)
+        plt.scatter(tripwise_inducer,tripwise_fluo)
+        plt.xscale('log')
+        plt.yscale('log')
+        #plot prediction
+        
+        hill=model_hill(params_list=[1]*13,I_conc=meta_dict["WT"].S)
+        
+        for WT_pars,Mut1_pars,Mut2_pars, Mut3_pars in zip(WT_pars_array,mut1_pars_array,mut2_pars_array, mut3_pars_array):
+
+            #identification of mutant types
+            if mut1.startswith('Sensor') & mut2.startswith('Output'):
+                M = {'As':Mut1_pars[0],'Bs':Mut1_pars[1],'Cs':Mut1_pars[2],'Ns':Mut1_pars[3],'Ar':Mut3_pars[0],'Br':Mut3_pars[1],'Cr':Mut3_pars[2],'Nr':Mut3_pars[3],'Ao':Mut2_pars[0],'Bo':Mut2_pars[1],'Co':Mut2_pars[2],'No':Mut2_pars[3],'Fo':0.0}
+            elif mut1.startswith('Sensor') & mut2.startswith('Regulator'):
+                M = {'As':Mut1_pars[0],'Bs':Mut1_pars[1],'Cs':Mut1_pars[2],'Ns':Mut1_pars[3],'Ar':Mut2_pars[0],'Br':Mut2_pars[1],'Cr':Mut2_pars[2],'Nr':Mut2_pars[3],'Ao':Mut3_pars[0],'Bo':Mut3_pars[1],'Co':Mut3_pars[2],'No':Mut3_pars[3],'Fo':0.0}
+            elif mut1.startswith('Regulator') & mut2.startswith('Output'):
+                M = {'As':Mut3_pars[0],'Bs':Mut3_pars[1],'Cs':Mut3_pars[2],'Ns':Mut3_pars[3],'Ar':Mut3_pars[0],'Br':Mut1_pars[1],'Cr':Mut1_pars[2],'Nr':Mut1_pars[3],'Ao':Mut2_pars[0],'Bo':Mut2_pars[1],'Co':Mut2_pars[2],'No':Mut2_pars[3],'Fo':0.0}
+            elif mut1.startswith('Regulator') & mut2.startswith('Sensor'):
+                M = {'As':Mut2_pars[0],'Bs':Mut2_pars[1],'Cs':Mut2_pars[2],'Ns':Mut2_pars[3],'Ar':Mut1_pars[1],'Br':Mut1_pars[1],'Cr':Mut1_pars[1],'Nr':Mut1_pars[1],'Ao':Mut3_pars[0],'Bo':Mut3_pars[1],'Co':Mut3_pars[2],'No':Mut3_pars[3],'Fo':0.0}
+            elif mut1.startswith('Output') & mut2.startswith('Regulator'):
+                M = {'As':Mut3_pars[0],'Bs':Mut3_pars[1],'Cs':Mut3_pars[2],'Ns':Mut3_pars[3],'Ar':Mut2_pars[0],'Br':Mut2_pars[1],'Cr':Mut2_pars[2],'Nr':Mut2_pars[3],'Ao':Mut1_pars[0],'Bo':Mut1_pars[1],'Co':Mut1_pars[2],'No':Mut1_pars[3],'Fo':0.0}
+            elif mut1.startswith('Output') & mut2.startswith('Sensor'):
+                M = {'As':Mut2_pars[0],'Bs':Mut2_pars[1],'Cs':Mut2_pars[2],'Ns':Mut2_pars[3],'Ar':Mut3_pars[0],'Br':Mut3_pars[1],'Cr':Mut3_pars[2],'Nr':Mut3_pars[3],'Ao':Mut1_pars[0],'Bo':Mut1_pars[1],'Co':Mut1_pars[2],'No':Mut1_pars[3],'Fo':0.0}
+            else:
+                raise KeyError('Mutant names invalid 212')
+            par_dict = {
+                "A_s":10**WT_pars[0],
+                "B_s":10**WT_pars[1],
+                "C_s":10**WT_pars[2],
+                "N_s":WT_pars[3],
+                "MA_s":10**M['As'],
+                "MB_s":10**M['Bs'],
+                "MC_s":10**M['Cs'],
+                "MN_s":10**M['Ns'], 
+                "A_r":10**WT_pars[4],
+                "B_r":10**WT_pars[5],
+                "C_r":10**WT_pars[6],
+                "N_r":WT_pars[7],
+                "MA_r":10**M['Ar'],
+                "MB_r":10**M['Br'],
+                "MC_r":10**M['Cr'],
+                "MN_r":10**M['Nr'],
+                "A_o":10**WT_pars[8],
+                "B_o":10**WT_pars[9],
+                "C_o":10**WT_pars[10],
+                "N_o":WT_pars[11],
+                "F_o":WT_pars[12],
+                "MA_o":10**M['Ao'],
+                "MB_o":10**M['Bo'],
+                "MC_o":10**M['Co'],
+                "MN_o":10**M['No'],
+                "MF_o":10**M['Fo'],
+                    }
+            
+            par_list = list(par_dict.values())
+
+
+            Sensor_est_array,Regulator_est_array,Output_est_array, Stripe_est_array = hill.model_muts(I_conc= ind,params_list=par_list)
+
+            plt.plot(ind, Stripe_est_array, c = 'green', alpha = 0.1)
+            plt.scatter(ind, Stripe_est_array, c = 'green', alpha = 0.1)
+
+            plt.title(f'Pairwise mutant fit: {trip1}_{trip2}_{trip3}')
+
     else:
         raise KeyError('incorrect number of mutants, must be 2 or 3')
 
 
 
 # %%
+
+'''Calculating Epistasis Hat'''
+
+#Currently, get_Eps takes in one set of parameters and calculates epistasis at low, medium and high inducer concentrations. Could change get_params code - get params takes a dataframe of single mutant and wildtype parameters, so I could potentially make that a thing.
+
+#with Eps_to_Excel, all the visualisation of previous plots can be recycled to examine the distribution of epistasis values, epistasis for
+
+#generate 1e6 random parameters from each mutant and add low medium and high fluo to lists, append to dataframe with mutant combo
+
+#for each mutant combination for pairwise, generate 3 million epistasis values
+#dataframe = {genotype:{}, low_eps:{}, med_eps:{}, high_eps:{}}
+#sub_dataframe containing only genotype of interest and plot violin plots of distribution of epistasis, 1 million epistasis of wildtype.
+
+def New_get_Eps():
+    DM_df = meta_dict['DM']
+    DM_names = DM_df['genotype'].unique()
+
+#%%
+from Plotting_functions import *
+'''Examining the WT distribution of parameter sets between mutants'''
+
+def get_combo_WT_df(mutants:list):
+    mutant1 = mutants[0]
+    mutant2 = mutants[1]
+
+    path = f'../data/smc_SM_hill/{mutant1}_smc/all_pars_final.out' 
+    df1 = Out_to_DF_hill(path, model_hill.model_muts, mutant1, all=True)
+    WT1_df = df1[['As','Bs','Cs','Ns','Ar','Br','Cr','Nr','Ao','Bo','Co','No','Fo']]
+    mod_path = f'../data/smc_SM_hill/{mutant1}_smc/pars_final.out' 
+    M1_mods_df = Out_to_DF_hill(mod_path, model_hill.model_muts, mutant1, all=False)
+
+    M1_mods_df.reset_index(drop=True, inplace=True)
+    WT1_df.reset_index(drop=True, inplace=True)
+    M1_df = pd.concat([WT1_df,M1_mods_df], axis=1)
+
+        
+            #mutant2 modifiers
+    path2 = f'../data/smc_SM_hill/{mutant2}_smc/all_pars_final.out'  
+    df2 = Out_to_DF_hill(path2, model_hill.model_muts, mutant2, all=True)
+    WT2_df = df2[['As','Bs','Cs','Ns','Ar','Br','Cr','Nr','Ao','Bo','Co','No','Fo']]
+    mod_path2 = f'../data/smc_SM_hill/{mutant2}_smc/pars_final.out' 
+    M2_mods_df = Out_to_DF_hill(mod_path2, model_hill.model_muts, mutant2, all=False)
+
+    #a df with modifier params after wildtype
+
+    M2_mods_df.reset_index(drop=True, inplace=True)
+    WT2_df.reset_index(drop=True, inplace=True)
+    M2_df = pd.concat([WT2_df,M2_mods_df], axis=1)
+
+    Combined_WT = pd.concat([WT1_df,WT2_df], axis=0)
+
+
+    return Combined_WT, M1_mods_df, M2_mods_df, M1_df, M2_df
+
+
+# WT1_df = WT1_df.assign(Genotype= f'{mutant1}')
+# WT2_df = WT2_df.assign(Genotype= f'{mutant2}')
+#Paired_Density_plot_compare(Combined_WT,n,huw = 'Genotype', save=False)
+
+
+
+
+# %%
+
+'''Code to create a viable set of combined single mutant parameters'''
+
+def get_combo_params(mutants:list):
+
+    #Step1: obtain mu of WT, mut1, mut2 and Covariance matrix of combined wildtypes
+
+    Combined_WT, M1_mods_df, M2_mods_df, M1_df, M2_df = get_combo_WT_df(mutants)
+
+    names = Combined_WT.keys()
+    params = len(Combined_WT.columns)
+    WT_matrix = np.empty(shape=(params,2000), dtype=float)
+    i = 0
+    for name in names:
+        WT_matrix[i] = Combined_WT[name].to_numpy()
+        i = i+1
+    
+    #range of parameters as x, means calculated
+    WT_mean_list = []
+    j = 0
+
+    for m in WT_matrix:
+        means = sum(m)
+        means = means/len(m)
+        WT_mean_list.append(means)
+        j = j+1
+
+    #generate cov matrix
+    WT_cov_matrix = np.cov(WT_matrix, bias = True)
+    #generate multivariate normal distribution
+    WT_multi_norm_dis = multivariate_normal(
+                        mean = WT_mean_list,
+                        cov = WT_cov_matrix,
+                        allow_singular = True)
+    
+    #Now sample a random parameter set from combined multivariate dist
+    rndint = np.random.randint(low=0, high=1e7)
+    
+    timeseed = time.time_ns() % 2**16
+    np.random.seed(rndint+timeseed)
+    seed(rndint+timeseed)
+    WT_sample = WT_multi_norm_dis.rvs(size=1, random_state=rndint+timeseed)
+
+    #Calculate mean for mut1 (just modifiers)
+    names = M1_mods_df.keys()
+    params = len(M1_mods_df.columns)
+    M1_mods_matrix = np.empty(shape=(params,1000), dtype=float)
+    i = 0
+    for name in names:
+        M1_mods_matrix[i] = M1_mods_df[name].to_numpy()
+        i = i+1
+    
+    M1_mean_list = []
+    j = 0
+
+    for m in M1_mods_matrix:
+        means = sum(m)
+        means = means/len(m)
+        M1_mean_list.append(means)
+        j = j+1
+
+    #Generate covariance matrix of full mutant params
+    names = M1_df.keys()
+    params = len(M1_df.columns)
+    M1_matrix = np.empty(shape=(params,1000), dtype=float)
+    i = 0
+    for name in names:
+        M1_matrix[i] = M1_df[name].to_numpy()
+        i = i+1
+    
+    M1_cov_matrix = np.cov(M1_matrix, bias = True)
+
+
+
+    mu1 = M1_mean_list.T
+
+    mu2 = WT_mean_list.T
+
+    C11 = M1_cov_matrix[0:13,0:13]
+    C12 = M1_cov_matrix[13:17,0:13]
+    C21 = M1_cov_matrix[0:13,13:]
+    C22 = M1_cov_matrix[13:17,13:]
+
+    #conditional_data = np.random.multivariate_normal(mu2,C22)
+
+    #Problem with shapes of matrices not aligning and thus non multiply-able
+    conditional_mu = mu1 + C12.dot(np.linalg.inv(C22)).dot((WT_sample - mu2).T).T
+
+    conditional_cov = C11 - C12.dot(np.linalg.inv(C22)).dot(C21)
+
+    M1_multi_dis = np.random.multivariate_normal(mean = conditional_mu,
+                                                 cov = conditional_cov,
+                                                 allow_singular = True)
+
+
+
+
+
+
+    #convert df into matrix
+    names = df.keys()
+    params = len(df.columns)
+    matrix = np.empty(shape=(params,1000), dtype=float)
+    i = 0
+    for name in names:
+        matrix[i] = df[name].to_numpy()
+        i = i+1
+
+    #range of parameters as x, means calculated
+    mean_list = []
+    ranges = np.empty(shape=(params,10), dtype=float)
+    j = 0
+    
+    for m in matrix:
+        means = sum(m)
+        means = means/len(m)
+        mean_list.append(means)
+        mini = min(m)
+        maxi = max(m)
+        temp = np.linspace(mini,maxi,10)
+        ranges[j] = temp
+        j = j+1
+    #generate cov matrix
+    cov_matrix = np.cov(matrix, bias = True)
+    #generate multivariate normal distribution
+    multi_norm_dis = multivariate_normal(
+                        mean = mean_list,
+                        cov = cov_matrix,
+                        allow_singular = True)
+    return multi_norm_dis
+

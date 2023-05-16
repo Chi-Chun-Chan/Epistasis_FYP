@@ -786,13 +786,100 @@ def Paired_Density_plot(dataframe, name, save:bool):
     #uses the priors from the parameters to act as the range
     g.fig.suptitle(f"Parameter distribution of ({name})")
 
-    count = 14
+    count = -1
 
     for j in range(0,13):
-        count = count - 1
-        for i in range(0,count):
+        count = count + 1
+        for i in range(count,13):
             g.axes[i,j].set_xlim((parlist[j]['lower_limit'], parlist[j]['upper_limit']))
             g.axes[i,j].set_ylim((parlist[i]['lower_limit'], parlist[i]['upper_limit']))
+
+
+    if save == True:
+        plt.savefig(f'../results/{name}_Hill_Paired_Density.pdf', format="pdf", bbox_inches="tight")
+    elif save == False:
+        print('plot not saved btw')
+    else:
+        print('Unclear whether to save plot or not')
+    return 
+
+def Paired_Density_plot_compare(dataframe, name, huw, save:bool):
+    '''Plots joint distribution of parameters from ABC_SMC'''
+    sns.set_theme(style="white")
+
+    df = dataframe
+    col_names = list(df.columns)
+    new_cols = []
+    for i in range(0,len(col_names)-1):
+        new_cols.append(col_names[i])
+
+    g = sns.pairplot(df, vars = new_cols, kind = "kde", hue = huw, corner=True)
+    #sns.axes[0,0].set_xlim((0,0))
+    # parlist: List[Dict[str, Union[str, float]]] = {0:{
+    # 'name': 'log_A_s',
+    # 'lower_limit': 2.0,
+    # 'upper_limit': 4.0
+    # }, 1: {
+    # 'name': 'log_B_s',
+    # 'num': 1,
+    # 'lower_limit': 2.0,
+    # 'upper_limit': 5.0
+    # }, 2: {
+    # 'name': 'log_C_s',
+    # 'lower_limit': 2.0,
+    # 'upper_limit': 4.0
+    # }, 3: {
+    # 'name': 'N_s',
+    # 'lower_limit': 1.0,
+    # 'upper_limit': 4.0
+    # }, 4: {
+    # 'name': 'log_A_r',
+    # 'lower_limit': 2.0,
+    # 'upper_limit': 4.0
+    # }, 5: {
+    # 'name': 'log_B_r',
+    # 'lower_limit': 2.0,
+    # 'upper_limit': 4.0
+    # }, 6: {
+    # 'name': 'log_C_r',
+    # 'lower_limit': -4.0,
+    # 'upper_limit': -1.0
+    # }, 7: {
+    # 'name': 'N_r',
+    # 'lower_limit': 1.0,
+    # 'upper_limit': 4.0
+    # }, 8: {
+    # 'name': 'log_A_o',
+    # 'lower_limit': 2.0,
+    # 'upper_limit': 4.0
+    # }, 9: {
+    # 'name': 'log_B_o',
+    # 'lower_limit': 4.0,
+    # 'upper_limit': 8.0
+    # }, 10: {
+    # 'name': 'log_C_o',
+    # 'lower_limit': -3.0,
+    # 'upper_limit': 0.0
+    # }, 11: {
+    # 'name': 'N_o',
+    # 'lower_limit': 1.0,
+    # 'upper_limit': 4.0
+    # }, 12: {
+    # 'name': 'F_o',
+    # 'lower_limit': 0.0,
+    # 'upper_limit': 2.0
+    # } } 
+
+    # #uses the priors from the parameters to act as the range
+    g.fig.suptitle(f"Parameter distribution of ({name})")
+
+    # count = -1
+
+    # for j in range(0,13):
+    #     count = count + 1
+    #     for i in range(count,13):
+    #         g.axes[i,j].set_xlim((parlist[j]['lower_limit'], parlist[j]['upper_limit']))
+    #         g.axes[i,j].set_ylim((parlist[i]['lower_limit'], parlist[i]['upper_limit']))
 
 
     if save == True:
@@ -810,34 +897,39 @@ def Paired_Density_plot_mut(dataframe, name, save:bool):
     df = dataframe
     
     col_names = list(df.columns.values)
-    g = sns.pairplot(df,kind = 'kde', corner=True)
+        
+    g = sns.pairplot(df, vars = col_names, kind = "kde", corner=True)
 
     # g = sns.pairplot(df, kind = "kde", corner=True)
 
     #g.setp(axes, xlim=custom_xlim, ylim=custom_ylim)
     
+    parlist: List[Dict[str, Union[str, float]]] = {0:{
+    'name': 'log_MA',
+    'lower_limit': -2.0,
+    'upper_limit': 2.0
+    }, 1: {
+    'name': 'log_MB',
+    'lower_limit': -2.0,
+    'upper_limit': 2.0
+    }, 2: {
+    'name': 'log_MC',
+    'lower_limit': -1.0,
+    'upper_limit': 1.0
+    }, 3: {
+    'name': 'log_MN',
+    'lower_limit': -1.0,
+    'upper_limit': 1.0
+    }} 
     
     
-    
-    g.axes[0,0].set_xlim((-4,4))
-    g.axes[0,0].set_ylim((-4,4))
-    g.axes[1,0].set_xlim((-4,4))
-    g.axes[1,0].set_ylim((-4,4))
-    g.axes[2,0].set_xlim((-4,4))
-    g.axes[2,0].set_ylim((-4,4))
-    g.axes[3,0].set_xlim((-4,4))
-    g.axes[3,0].set_ylim((-4,4))
-    g.axes[1,1].set_xlim((-4,4))
-    g.axes[1,1].set_ylim((-4,4))
-    g.axes[2,1].set_xlim((-4,4))
-    g.axes[2,1].set_ylim((-4,4))
-    g.axes[3,1].set_xlim((-4,4))
-    g.axes[3,1].set_ylim((-4,4))
-    g.axes[2,2].set_xlim((-4,4))
-    g.axes[2,2].set_ylim((-4,4))
-    g.axes[3,2].set_xlim((-4,4))
-    g.axes[3,2].set_ylim((-4,4))
+    count = -1
 
+    for j in range(0,4):
+        count = count + 1
+        for i in range(count,4):
+            g.axes[i,j].set_xlim((parlist[j]['lower_limit'], parlist[j]['upper_limit']))
+            g.axes[i,j].set_ylim((parlist[i]['lower_limit'], parlist[i]['upper_limit']))
     
     
     g.fig.suptitle(f"Parameter distribution of Mutant ({name})")
