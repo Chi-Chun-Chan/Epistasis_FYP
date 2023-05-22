@@ -27,57 +27,57 @@ WT_converged_params = Out_to_DF_hill(path, model_hill.model, '', all = False)
 param_dist = multivariate_dis(WT_converged_params)
 
 WT = 'Wildtype'
-Paired_Density_plot(WT_converged_params, name = WT, save=True)
+#Paired_Density_plot(WT_converged_params, name = WT, save=True)
 
 #%%
 '''visualising whether the random selection of params from multi-v guassian is correct'''
-start_time_per_mutant=time.time()
-np.random.seed(0)  
-rndint = np.random.randint(low=0, high=1e7)
+# start_time_per_mutant=time.time()
+# np.random.seed(0)  
+# rndint = np.random.randint(low=0, high=1e7)
     
-timeseed = time.time_ns() % 2**16
-np.random.seed(rndint+timeseed)
-seed(rndint+timeseed)
+# timeseed = time.time_ns() % 2**16
+# np.random.seed(rndint+timeseed)
+# seed(rndint+timeseed)
 
-WT_converged_params = Out_to_DF_hill(path, model_hill.model, '', all = False) #WT SMC_ABC results
+# WT_converged_params = Out_to_DF_hill(path, model_hill.model, '', all = False) #WT SMC_ABC results
 
-param_dist = multivariate_dis(WT_converged_params, 13) #convert to multivariable distribution
+# param_dist = multivariate_dis(WT_converged_params) #convert to multivariable distribution
 
-random_params = param_dist.rvs(size=1, random_state=rndint+timeseed) #randomly selects one set of parameters
+# random_params = param_dist.rvs(size=1, random_state=rndint+timeseed) #randomly selects one set of parameters
 
-#test to see if sampling from multi-variate distribution works
-param1 = []
-param1 = WT_converged_params['Br'].to_numpy()
+# #test to see if sampling from multi-variate distribution works
+# param1 = []
+# param1 = WT_converged_params['Br'].to_numpy()
 
-param2 = []
-param2 = WT_converged_params['Cr'].to_numpy()
+# param2 = []
+# param2 = WT_converged_params['Cr'].to_numpy()
 
-param1_gaus = []
-param2_gaus = []
-temp = param_dist.rvs(size=100, random_state=rndint+timeseed+200)
+# param1_gaus = []
+# param2_gaus = []
+# temp = param_dist.rvs(size=100, random_state=rndint+timeseed+200)
 
-for items in temp:
-    param1_gaus.append(items[5]) #Looks at the 5th and 6th parameters from the param set
-    param2_gaus.append(items[6]) #Both values were taken from the same random sample
+# for items in temp:
+#     param1_gaus.append(items[5]) #Looks at the 5th and 6th parameters from the param set
+#     param2_gaus.append(items[6]) #Both values were taken from the same random sample
 
-plt.scatter(param1,param2, c = 'b', label= 'WT param dist') #WT
-plt.scatter(param1_gaus,param2_gaus, c ='r', label= 'Multi-variate gaus') 
+# plt.scatter(param1,param2, c = 'b', label= 'WT param dist') #WT
+# plt.scatter(param1_gaus,param2_gaus, c ='r', label= 'Multi-variate gaus') 
 #%%
 '''Old strategy single parameter set visualisation'''
-Hill_model = model_hill(params_list=[1]*13, I_conc=meta_dict["WT"].S)
-func = Hill_model.model
+# Hill_model = model_hill(params_list=[1]*13, I_conc=meta_dict["WT"].S)
+# func = Hill_model.model
 
-params_hill_dict={"sen_params":{"A_s":10**2.881002710475187190e+00,"B_s":10**4.234114461927148021e+00,"C_s":10**2.917517255582483315e+00,"N_s":1.125732163978979461e+00},"reg_params":{"A_r":10**3.367414514911509116e+00,"B_r":10**3.841889231200538379e+00,"C_r":10**-2.898387275917982286e+00,"N_r":1.742140699208641008e+00
-},"out_h_params":{},"out_params":{"A_o":10**3.039548305373660053e+00,"B_o":10**4.894183658414895888e+00,"C_o":10**-2.822117047581649274e+00,"N_o":1.688399702374762335e+00},"free_params":{"F_o":1.522445716338543864e+00}}
-params_hill_list=dict_to_list(params_hill_dict)
+# params_hill_dict={"sen_params":{"A_s":10**2.881002710475187190e+00,"B_s":10**4.234114461927148021e+00,"C_s":10**2.917517255582483315e+00,"N_s":1.125732163978979461e+00},"reg_params":{"A_r":10**3.367414514911509116e+00,"B_r":10**3.841889231200538379e+00,"C_r":10**-2.898387275917982286e+00,"N_r":1.742140699208641008e+00
+# },"out_h_params":{},"out_params":{"A_o":10**3.039548305373660053e+00,"B_o":10**4.894183658414895888e+00,"C_o":10**-2.822117047581649274e+00,"N_o":1.688399702374762335e+00},"free_params":{"F_o":1.522445716338543864e+00}}
+# params_hill_list=dict_to_list(params_hill_dict)
 
-converged_params_list_hill=Plotter(model_type=func,start_guess=params_hill_list,n_iter=1e5,method="Nelder-Mead",params_dict=params_hill_dict,custom_settings=[],tol=0.0001,mutation='Wildtype')
+# converged_params_list_hill=Plotter(model_type=func,start_guess=params_hill_list,n_iter=1e5,method="Nelder-Mead",params_dict=params_hill_dict,custom_settings=[],tol=0.0001,mutation='Wildtype')
 
-data = meta_dict["WT"]
-RSS_Score(params_hill_list,model_hill,data, model_specs='None')
+# data = meta_dict["WT"]
+# RSS_Score(params_hill_list,model_hill,data, model_specs='None')
 
-#minimisation to data using non-linear least squares
-converged_params_list_hill=get_WT_params(model_type=func,start_guess=params_hill_list,n_iter=1e5,method="Nelder-Mead",params_dict=params_hill_dict,custom_settings=[],tol=0.0001) 
+# #minimisation to data using non-linear least squares
+# converged_params_list_hill=get_WT_params(model_type=func,start_guess=params_hill_list,n_iter=1e5,method="Nelder-Mead",params_dict=params_hill_dict,custom_settings=[],tol=0.0001) 
 # %%
 '''Plotting functions to visualise Hill modifier params for SM'''
 #Visualising parameter distribution
@@ -227,11 +227,11 @@ def Visualise_SM_par_dis(mut_name, iter, saves:bool):
     return Paired_Density_plot_mut(df2, name = mut_name, save = saves)
 
 #put a mutant name and the final or last SMC step
-mut = 'Regulator2'
-num = 'final'
-fig, scores, set_list = Visualise_SM_fit(mut_name=mut, iter = num, plot_num = 50, save = True)
+# mut = 'Regulator10'
+# num = 'final'
+# fig, scores, set_list = Visualise_SM_fit(mut_name=mut, iter = num, plot_num = 50, save = True)
 
-Visualise_SM_par_dis(mut_name= mut, iter = num, saves = True)
+# Visualise_SM_par_dis(mut_name= mut, iter = num, saves = True)
 # %%
 
 '''Calculating Epistasis Hat'''
@@ -392,7 +392,7 @@ def get_combo_params(mutants:list):
                                         allow_singular = True
                                                  )
     
-    M1_cond_params = M1_multi_dis.rvs(size = 10, random_state=rndint+ timeseed)
+    M1_cond_params = M1_multi_dis.rvs(size = 100, random_state=rndint+ timeseed)
     ###############################################
     #Calculate mean for mut2 (just modifiers)
     names = M2_mods_df.keys()
@@ -442,13 +442,13 @@ def get_combo_params(mutants:list):
                                        allow_singular = True
                                                  )
     
-    M2_cond_params = M2_multi_dis.rvs(size = 10, random_state=rndint+ timeseed)
+    M2_cond_params = M2_multi_dis.rvs(size = 100, random_state=rndint+ timeseed)
 
     return WT_sample, M1_cond_params, M2_cond_params
 
 
-mutants = ['Regulator9','Output3']
-WT, M1, M2 = get_combo_params(mutants)
+# mutants = ['Regulator9','Output3']
+# WT, M1, M2 = get_combo_params(mutants)
 # %%
 # %%
 '''Visualisation of pairwise/triplet fits using combined modifiers'''
@@ -464,7 +464,7 @@ def Visualise_combo_mut_fit(mutants:list):
         np.random.seed(rndint+timeseed)
         seed(rndint+timeseed)
 
-        size = 100
+        size = 1000
         
         #WT params
         # path = '../data/smc_hill/pars_final.out'
@@ -510,6 +510,7 @@ def Visualise_combo_mut_fit(mutants:list):
             pair_mut_dict = DM_df.loc[DM_df['genotype'].str.contains(pair1)]
             if pair1.endswith('1'):
                 pair_mut_dict = pair_mut_dict.loc[DM_df['genotype'].str.contains('1_')]
+                pair_mut_dict = pair_mut_dict.loc[pair_mut_dict['genotype'].str.endswith('1')]
         elif pair1.startswith('O'):
             pair_mut_dict = DM_df.loc[DM_df['genotype'].str.contains(pair1)]
 
@@ -718,13 +719,7 @@ def Visualise_combo_mut_fit(mutants:list):
         data_stripe = [data.Stripe[1],data.Stripe[5],data.Stripe[14],]
         data_stripe = np.log(data_stripe)
         sns.pointplot(x=np.arange(len(data_stripe)), y=data_stripe, ax=axes2, color = 'indigo')
-        # Sensor_est_array,Regulator_est_array,Output_est_array, Stripe_est_array = hill.model_muts(I_conc= ind,params_list=par_list)
 
-        # plt.plot(data_ind, data_stripe, c = 'black', alpha = 1.0, label = 'WT')
-        # plt.scatter(data_ind, data_stripe, c = 'black', alpha = 1.0)
-        
-        
-        
         Rand = mpatches.Patch(color= 'mistyrose', label='Estimated fluorescence')
         Wildtype = mpatches.Patch(color= 'indigo', label='Wildtype') #Could potenitally plot the actual wildtype data
         data_set = mpatches.Patch(color= 'darkcyan', label='Pairwise data')
@@ -736,9 +731,561 @@ def Visualise_combo_mut_fit(mutants:list):
     
    
 
-mutants = ['Output3', 'Sensor9']
-Visualise_combo_mut_fit(mutants)
+# mutants = ['Sensor5', 'Regulator3']
+# Visualise_combo_mut_fit(mutants)
 # %%
+
+'''calculating the mode of predicted fluorescence'''
+import numpy as np
+from scipy.stats import gaussian_kde
+from random import seed
+import time
+
+def obtain_pred_fluo(mutants:list, size = 1000):
+    '''Takes 2 or 3 mutants in a list and returns a dataframe of 3*size*1000 for predicted fluorescence at low, medium and high inducer concs '''
+    if len(mutants) == 2:
+        mut1 = mutants[0]
+        mut2 = mutants[1]
+
+        rndint = np.random.randint(low=0, high=1e7)
+        timeseed = time.time_ns() % 2**16
+        np.random.seed(rndint+timeseed)
+        seed(rndint+timeseed)
+
+        #plot pairwise fit
+        #selects mutant shortcode and assembles into correct mutant ID
+        for i in range(0,10):
+            if mut1.endswith(f'{i}'):
+                if i == 0:
+                    pair1 = f'{mut1[0]}1{i}'
+                else:
+                    pair1 = f'{mut1[0]}{i}'
+
+            if mut2.endswith(f'{i}'):
+                if i == 0:
+                    pair2 = f'{mut2[0]}1{i}'
+                else:
+                    pair2 = f'{mut2[0]}{i}'
+
+        DM_df = meta_dict['DM']
+
+        #All mutants are in order of R_S_O
+
+        if pair1.startswith('R') | pair1.startswith('S'):
+
+            pair_mut_dict = DM_df.loc[DM_df['genotype'].str.contains(pair1)]
+            if pair1.endswith('1'):
+                pair_mut_dict = pair_mut_dict.loc[DM_df['genotype'].str.contains('1_')]
+                pair_mut_dict = pair_mut_dict.loc[pair_mut_dict['genotype'].str.endswith('1')]
+        elif pair1.startswith('O'):
+            pair_mut_dict = DM_df.loc[DM_df['genotype'].str.contains(pair1)]
+
+            if pair1.endswith('1'):
+                pair_mut_dict = pair_mut_dict.loc[pair_mut_dict['genotype'].str.endswith('1')]
+                #incase pair ends with a 1 and 10 is included
+        
+        if pair2.startswith('R') | pair2.startswith('S'):
+
+            pair_mut_dict = pair_mut_dict.loc[pair_mut_dict['genotype'].str.contains(pair2)]
+            if pair2.endswith('1'):
+                pair_mut_dict = pair_mut_dict.loc[pair_mut_dict['genotype'].str.contains('1_')]
+        elif pair2.startswith('O'):
+            pair_mut_dict = pair_mut_dict.loc[pair_mut_dict['genotype'].str.contains(pair2)]
+
+            if pair2.endswith('1'):
+                pair_mut_dict = pair_mut_dict.loc[pair_mut_dict['genotype'].str.endswith('1')]
+        
+
+        pairwise_fluo = []
+        for fluo in pair_mut_dict['obs_fluo_mean']:
+            pairwise_fluo.append(fluo)
+
+
+        pairwise_inducer = [0.00001, 0.0002, 0.2]
+
+        ind = pd.DataFrame(pairwise_inducer)
+        #plot mutant fits
+        hill=model_hill(params_list=[1]*13,I_conc=meta_dict["WT"].S)
+
+        WT_pars_array = np.empty(shape=(size,13))
+        Mut1_pars_array = np.empty(shape=(size,4))
+        Mut2_pars_array = np.empty(shape=(size,4))
+
+        low = []
+        med = []
+        high = []
+
+        for i in range(0,size):
+            WT_pars, Mut1_pars_array, Mut2_pars_array = get_combo_params(mutants)
+            for Mut1_pars,Mut2_pars in zip(Mut1_pars_array,Mut2_pars_array):
+            #identification of mutant types
+                if mut1.startswith('Sensor') & mut2.startswith('Output'):
+                    M = {'As':Mut1_pars[0],'Bs':Mut1_pars[1],'Cs':Mut1_pars[2],'Ns':Mut1_pars[3],'Ar':0.0,'Br':0.0,'Cr':0.0,'Nr':0.0,'Ao':Mut2_pars[0],'Bo':Mut2_pars[1],'Co':Mut2_pars[2],'No':Mut2_pars[3],'Fo':0.0}
+                elif mut1.startswith('Sensor') & mut2.startswith('Regulator'):
+                    M = {'As':Mut1_pars[0],'Bs':Mut1_pars[1],'Cs':Mut1_pars[2],'Ns':Mut1_pars[3],'Ar':Mut2_pars[0],'Br':Mut2_pars[1],'Cr':Mut2_pars[2],'Nr':Mut2_pars[3],'Ao':0.0,'Bo':0.0,'Co':0.0,'No':0.0,'Fo':0.0}
+                elif mut1.startswith('Regulator') & mut2.startswith('Output'):
+                    M = {'As':0.0,'Bs':0.0,'Cs':0.0,'Ns':0.0,'Ar':Mut1_pars[0],'Br':Mut1_pars[1],'Cr':Mut1_pars[2],'Nr':Mut1_pars[3],'Ao':Mut2_pars[0],'Bo':Mut2_pars[1],'Co':Mut2_pars[2],'No':Mut2_pars[3],'Fo':0.0}
+                elif mut1.startswith('Regulator') & mut2.startswith('Sensor'):
+                    M = {'As':Mut2_pars[0],'Bs':Mut2_pars[1],'Cs':Mut2_pars[2],'Ns':Mut2_pars[3],'Ar':Mut1_pars[1],'Br':Mut1_pars[1],'Cr':Mut1_pars[1],'Nr':Mut1_pars[1],'Ao':0.0,'Bo':0.0,'Co':0.0,'No':0.0,'Fo':0.0}
+                elif mut1.startswith('Output') & mut2.startswith('Regulator'):
+                    M = {'As':0.0,'Bs':0.0,'Cs':0.0,'Ns':0.0,'Ar':Mut2_pars[0],'Br':Mut2_pars[1],'Cr':Mut2_pars[2],'Nr':Mut2_pars[3],'Ao':Mut1_pars[0],'Bo':Mut1_pars[1],'Co':Mut1_pars[2],'No':Mut1_pars[3],'Fo':0.0}
+                elif mut1.startswith('Output') & mut2.startswith('Sensor'):
+                    M = {'As':Mut2_pars[0],'Bs':Mut2_pars[1],'Cs':Mut2_pars[2],'Ns':Mut2_pars[3],'Ar':0.0,'Br':0.0,'Cr':0.0,'Nr':0.0,'Ao':Mut1_pars[0],'Bo':Mut1_pars[1],'Co':Mut1_pars[2],'No':Mut1_pars[3],'Fo':0.0}
+                else:
+                    raise KeyError('Mutant names invalid 212')
+            
+                par_dict = {
+                    "A_s":10**WT_pars[0],
+                    "B_s":10**WT_pars[1],
+                    "C_s":10**WT_pars[2],
+                    "N_s":10**WT_pars[3],
+                    "MA_s":10**M['As'],
+                    "MB_s":10**M['Bs'],
+                    "MC_s":10**M['Cs'],
+                    "MN_s":10**M['Ns'], 
+                    "A_r":10**WT_pars[4],
+                    "B_r":10**WT_pars[5],
+                    "C_r":10**WT_pars[6],
+                    "N_r":10**WT_pars[7],
+                    "MA_r":10**M['Ar'],
+                    "MB_r":10**M['Br'],
+                    "MC_r":10**M['Cr'],
+                    "MN_r":10**M['Nr'],
+                    "A_o":10**WT_pars[8],
+                    "B_o":10**WT_pars[9],
+                    "C_o":10**WT_pars[10],
+                    "N_o":10**WT_pars[11],
+                    "F_o":10**WT_pars[12],
+                    "MA_o":10**M['Ao'],
+                    "MB_o":10**M['Bo'],
+                    "MC_o":10**M['Co'],
+                    "MN_o":10**M['No'],
+                    "MF_o":10**M['Fo'],
+                        }
+            
+                par_list = list(par_dict.values())
+
+                Sensor_est_array,Regulator_est_array,Output_est_array, Stripe_est_array = hill.model_muts(I_conc= ind,params_list=par_list)
+
+                low.append(Stripe_est_array.iloc[0,0])
+                med.append(Stripe_est_array.iloc[1,0])
+                high.append(Stripe_est_array.iloc[2,0])
+
+        genotype = [f'{pair1}_{pair2}']*len(low)
+
+        temp = {'Genotype':genotype, 'low':low, 'medium':med, 'high':high}
+
+        df = pd.DataFrame(temp)
+
+        return df
+
+def Kde_mode(df):
+    '''Finds the mode from a kde of low medium high data'''
+    low = df['low'].tolist()
+    med = df['medium'].tolist()
+    high = df['high'].tolist()
+
+    low_kde = gaussian_kde(low)
+    medium_kde = gaussian_kde(med)
+    high_kde = gaussian_kde(high)
+
+    x = np.linspace(min(low),max(low),num=1000)
+    y = low_kde(x)
+
+    mode_index = np.argmax(y)
+    low_mode = x[mode_index]
+
+    x = np.linspace(min(med),max(med),num=1000)
+    y = medium_kde(x)
+
+    mode_index = np.argmax(y)
+    med_mode = x[mode_index]
+
+    x = np.linspace(min(high),max(high),num=1000)
+    y = high_kde(x)
+
+    mode_index = np.argmax(y)
+    high_mode = x[mode_index]
+
+    return low_mode, med_mode, high_mode
+    
+'''Obtain all epistasis hat values for our model'''
+from data_wrangling import *
+df_DM = meta_dict['DM']
+g_WT = np.array(df_DM['obs_fluo_mean'][df_DM['genotype']=='WT'])
+def G_hat_all(df):
+    low = df['low'].tolist()
+    med =df['medium'].tolist()
+    high = df['high'].tolist()
+    
+    l_g_hat = [np.divide(l,g_WT[0]) for l in low]
+    m_g_hat = [np.divide(m,g_WT[1]) for m in med]
+    h_g_hat = [np.divide(h,g_WT[2]) for h in high]
+
+    G_low = [np.log10(ghat) for ghat in l_g_hat]
+    G_med = [np.log10(ghat) for ghat in m_g_hat]
+    G_high = [np.log10(ghat) for ghat in h_g_hat]
+    
+    genotype = df['Genotype'].tolist()
+
+    temp = {'Genotype':genotype, 'G_low':G_low, 'G_medium':G_med, 'G_high':G_high}
+
+    df2 = pd.DataFrame(temp)
+
+    return df2
+
+def Eps(df, Glog):
+    Eps_low = []
+    Eps_med = []
+    Eps_high = []
+    for l,m,h in zip(df['G_low'],df['G_medium'],df['G_high']):
+        Ep_low = l - Glog[0]
+        Eps_low.append(Ep_low)
+
+        Ep_med = m - Glog[1]
+        Eps_med.append(Ep_med)
+
+        Ep_high = h - Glog[2]
+        Eps_high.append(Ep_high)
+    
+    genotype = df['Genotype'].tolist()
+
+    temp = {'Genotype':genotype, 'Eps_low':Eps_low, 'Eps_medium':Eps_med, 'Eps_high':Eps_high}
+
+    df2 = pd.DataFrame(temp)
+
+    return df2
+    
+
+
+def Generate_Eps_hat(mutant_list):
+        '''Get epistasis values for a given fluroescence output per mutant '''
+        #find G_log of mutants of interest
+        Glog_mean= G_log(mutant_list)[0]
+
+        #Get G_hat values for all predicted fluorescence 
+        LMH_df = obtain_pred_fluo(mutant_list) #low,med,high fluoresence
+        df = G_hat_all(LMH_df)
+        
+        return Eps(df,Glog_mean), Glog_mean
+
+
+
+from openpyxl import load_workbook
+def Generate_Epshat_all(prior_mutant:None):
+    '''Create large dataframe of all Epistasis at low, medium and high inducer concs'''
+    DM_names = DM_stripes['genotype'].tolist()
+    DM_names = list(set(DM_names[3:]))
+    
+    if prior_mutant == None:
+        Eps_pairwise_df = pd.DataFrame({'Genotype': [], 'Category':[], 'Epistasis_hat':[], 'Epistasis_obs': []})
+        mutant_range:slice=slice(0,len(DM_names))
+        Eps_pairwise_df.to_csv('../results/Pairwise_Eps.csv', index = False)
+        path = f"../results/Pairwise_Eps.csv"
+    else:
+        position = DM_names.index(prior_mutant)
+        path = f"../results/Pairwise_Eps.csv"
+        Eps_pairwise_df = pd.read_csv(path)
+        mutant_range:slice=slice(position,len(DM_names))
+
+    for genotypes in DM_names[mutant_range]:
+        #get genotypeID
+        mutant_list = get_mut_names(genotypes)
+        #Obtain epistasis values for predictions and LAD from LMH data 
+        Eps_df, G_log_mean= Generate_Eps_hat(mutant_list)
+        
+        G = G_lab(mutant_list)
+        G_obs = G[0] #observed fluoresence
+        low_Epsilon =  G_obs[0] - G_log_mean[0] #G_log_mean from the LAD model
+        med_Epsilon =  G_obs[1] - G_log_mean[1]
+        high_Epsilon =  G_obs[2] - G_log_mean[2]
+
+        Eps_hat = [] 
+        Categories = []
+        Eps_obs = []
+
+        for items in Eps_df['Eps_low'].tolist():
+            Eps_hat.append(items)
+            Categories.append('low')
+            Eps_obs.append(low_Epsilon)
+        for items in Eps_df['Eps_medium'].tolist():
+            Eps_hat.append(items)
+            Categories.append('medium')
+            Eps_obs.append(med_Epsilon)
+        for items in Eps_df['Eps_high'].tolist():
+            Eps_hat.append(items)
+            Categories.append('high')
+            Eps_obs.append(high_Epsilon)
+
+        Genotype_list = Eps_df['Genotype'].tolist() * 3
+
+
+        temp = {'Genotype': Genotype_list, 'Category':Categories, 'Epistasis_hat':Eps_hat, 'Epistasis_obs': Eps_obs}
+
+        new_df = pd.DataFrame(temp)
+        new_df.to_csv(path,mode='a', header=False, index=False)
+
+        # book = load_workbook(path)
+        # writer = pd.ExcelWriter(path, engine='openpyxl')
+        # writer.book = book
+        # Eps_pairwise_df = pd.read_excel(path)
+        # updated_data = pd.concat([Eps_pairwise_df,new_df],ignore_index=True)
+        # updated_data.to_excel(writer, index = False)
+        print(f'Mutant {genotypes} completed')
+    
+    print('mutants complete')
+    return
+    
+#split it into edible files
+import pandas as pd
+
+# Path to the large CSV file
+# large_csv_path = '../results/Pairwise_Eps.csv'
+
+# # Number of smaller files to create
+# num_files = 300
+
+# # Read the large CSV file in chunks
+# chunk_size = 300000  # Set the chunk size according to your memory constraints
+# df_chunks = pd.read_csv(large_csv_path, chunksize=chunk_size)
+
+# #Split the data into smaller chunks
+# file_counter = 1
+# for chunk in df_chunks:
+#     # Create a new file for each chunk
+#     name = chunk['Genotype'].iloc[0]
+#     smaller_csv_path = f'../results/All_pairwise_data/mutant_{name}.csv'
+#     chunk.to_csv(smaller_csv_path, index=False)
+#     file_counter += 1
+#     if file_counter > num_files:
+#         break
+
+
+def Eps_hat_to_mode(prior_mutant):
+    '''Takes the output from pairwise_Eps csv and calculates the mode, storing it in a new dataframe'''
+    DM_names = DM_stripes['genotype'].tolist()
+    DM_names = list(set(DM_names[3:]))
+    DM_names.sort()
+    count = 0
+    if prior_mutant == None:
+        Eps_mode_df = pd.DataFrame({'Genotype': [], 'low':[],'medium': [], 'high':[],'obs_low': [], 'obs_medium':[], 'obs_high': []})
+        path = '../results/Pairwise_Mode_Eps.csv'
+        mutant_range:slice=slice(0,len(DM_names))
+        Eps_mode_df.to_csv(path, index = False)
+
+        for i, genotypes in enumerate(DM_names[mutant_range]):
+            Low_list, Medium_list, High_list, Genotype_list, Obs_Low_list, Obs_Medium_list, Obs_High_list = [], [], [], [], [], [], []
+
+            Genotype_df = pd.read_csv(f"../results/All_pairwise_data/mutant_{genotypes}.csv")
+
+            # Genotype_df = df[df.Genotype.isin([f"{genotypes}"])]
+
+            Cato = 'Category'
+            Eps_h = 'Epistasis_hat'
+            Eps_o = 'Epistasis_obs'
+
+            grouped = Genotype_df.groupby([Cato], sort = False)
+
+            LMH = {'low': [], 'medium':[], 'high': []}
+            LMH_df = pd.DataFrame(LMH)
+            temp = {'obs_low': [], 'obs_medium':[], 'obs_high': []}
+            temp_df = pd.DataFrame(temp)
+
+            for j, (name, subdf) in enumerate(grouped):
+                LMH_df[name] = subdf[Eps_h].tolist()
+                temp_df[f'obs_{name}'] = subdf[Eps_o].tolist()
+            
+            l,m,h = Kde_mode(LMH_df)
+
+            Low_list.append(l)
+            Medium_list.append(m)
+            High_list.append(h)
+            Genotype_list.append(Genotype_df['Genotype'][0])
+            Obs_Low_list.append(temp_df['obs_low'][0])
+            Obs_Medium_list.append(temp_df['obs_medium'][0])
+            Obs_High_list.append(temp_df['obs_high'][0])
+        
+            new_df = pd.DataFrame({'Genotype': Genotype_list, 'low':Low_list,'medium': Medium_list, 'high':High_list,'obs_low': Obs_Low_list, 'obs_medium':Obs_Medium_list, 'obs_high': Obs_High_list})
+
+            count += 1
+
+            print(f'mutant {Genotype_list}', count)
+            new_df.to_csv(path,mode='a', header=False, index=False)
+        print(f'mutants complete')
+    else:
+        position = prior_mutant
+        path = '../results/Pairwise_Mode_Eps.csv'
+        mutant_range:slice=slice(position+1,len(DM_names))
+        count = prior_mutant
+        for i, genotypes in enumerate(DM_names[mutant_range]):
+            Low_list, Medium_list, High_list, Genotype_list, Obs_Low_list, Obs_Medium_list, Obs_High_list = [], [], [], [], [], [], []
+
+            Genotype_df = pd.read_csv(f"../results/All_pairwise_data/mutant_{genotypes}.csv")
+
+            # Genotype_df = df[df.Genotype.isin([f"{genotypes}"])]
+
+            Cato = 'Category'
+            Eps_h = 'Epistasis_hat'
+            Eps_o = 'Epistasis_obs'
+
+            grouped = Genotype_df.groupby([Cato], sort = False)
+
+            LMH = {'low': [], 'medium':[], 'high': []}
+            LMH_df = pd.DataFrame(LMH)
+            temp = {'obs_low': [], 'obs_medium':[], 'obs_high': []}
+            temp_df = pd.DataFrame(temp)
+
+            for j, (name, subdf) in enumerate(grouped):
+                LMH_df[name] = subdf[Eps_h].tolist()
+                temp_df[f'obs_{name}'] = subdf[Eps_o].tolist()
+            
+            l,m,h = Kde_mode(LMH_df)
+
+            Low_list.append(l)
+            Medium_list.append(m)
+            High_list.append(h)
+            Genotype_list.append(Genotype_df['Genotype'][0])
+            Obs_Low_list.append(temp_df['obs_low'][0])
+            Obs_Medium_list.append(temp_df['obs_medium'][0])
+            Obs_High_list.append(temp_df['obs_high'][0])
+        
+            new_df = pd.DataFrame({'Genotype': Genotype_list, 'low':Low_list,'medium': Medium_list, 'high':High_list,'obs_low': Obs_Low_list, 'obs_medium':Obs_Medium_list, 'obs_high': Obs_High_list})
+            count +=1
+            print(f'mutant {Genotype_list}')
+            print(count)
+            new_df.to_csv(path,mode='a', header=False, index=False)
+        print(f'mutants complete')
+
+
+    
+
+def Eps_distribution(mutant_list:list):
+    path = f"../results/Pairwise_Eps.xlsx"
+    df = pd.read_excel(path)
+    genotypes = get_mut_ids(mutant_list)
+
+    Genotype_df = df[df.Genotype.isin([f"{genotypes}"])]
+
+    Cato = 'Category'
+    Eps_h = 'Epistasis_hat'
+    Eps_o = 'Epistasis_obs'
+
+    grouped = Genotype_df.groupby([Cato], sort = False)
+
+    LMH = {'low': [], 'medium':[], 'high': []}
+    LMH_df = pd.DataFrame(LMH)
+    Obs = {'obs_low': [], 'obs_medium':[], 'obs_high': []}
+    Obs_df = pd.DataFrame(Obs)
+
+    for i, (name, subdf) in enumerate(grouped):
+        LMH_df[name] = subdf[Eps_h].tolist()
+        Obs_df[f'obs_{name}'] = subdf[Eps_o].tolist()
+    
+    low = LMH_df['low'].tolist()
+    med = LMH_df['medium'].tolist()
+    high = LMH_df['low'].tolist()
+
+    low_kde = gaussian_kde(low)
+    medium_kde = gaussian_kde(med)
+    high_kde = gaussian_kde(high)
+
+    x = np.linspace(min(low),max(low),num=1000)
+    y = low_kde(x)
+
+    mode_index = np.argmax(y)
+    mode_x = x[mode_index]
+    Obs_mode_x = Obs_df['obs_low'][0]
+
+    plt.hist(x, y, color='salmon', label='Distribution of Epistasis')
+    plt.xlabel('Predicted Epistasis hat')
+    plt.ylabel('Density')
+    plt.title(f'Distribution of Epistasis at low Iconc for mutant {genotypes}')
+    plt.axvline(mode_x, color='salmon', linestyle='--', label='Mode Epistasis')
+    plt.axvline(Obs_mode_x, color='darkcyan', linestyle='--', label='Observed Epistasis')
+    plt.legend()
+
+    plt.show()
+import matplotlib.ticker as mticker
+def Eps_hist():
+    '''Takes a list of mutants to look at the distribution of epistasis values, compares to observed distribution'''
+    DM_names = DM_stripes['genotype'].tolist()
+    DM_names = list(set(DM_names[3:]))
+    DM_names.sort()
+    path = '../results/Pairwise_Mode_Eps.csv'
+    df = pd.read_csv(path)
+
+    All_Eps_hat = []
+    All_Eps_obs = []
+
+    mutant_range:slice=slice(0,len(DM_names))
+    for genotypes in DM_names[mutant_range]:
+        #Get all Eps values in observed data
+        
+        subdf = df[df['Genotype'] == genotypes]
+        All_Eps_obs.append(subdf['obs_low'].iloc[0])
+        All_Eps_obs.append(subdf['obs_medium'].iloc[0])
+        All_Eps_obs.append(subdf['obs_high'].iloc[0])
+    
+
+        #Get all Eps
+
+        subdf = df[df['Genotype'] == genotypes]
+        All_Eps_hat.append(subdf['low'].iloc[0])
+        All_Eps_hat.append(subdf['medium'].iloc[0])
+        All_Eps_hat.append(subdf['high'].iloc[0])
+
+
+    fig = plt.figure()
+
+    plt.hist(All_Eps_hat, edgecolor = 'salmon',label = 'Model', bins='auto', linewidth=1, density=True, fill = False, histtype="stepfilled")
+    plt.grid(visible=False)
+    plt.hist(All_Eps_obs, edgecolor = 'darkcyan', label = 'Observed',bins='auto', linewidth=1, density=True, fill = False, histtype="stepfilled")
+    plt.grid(visible=False)
+    plt.xlabel('Epistasis')
+    plt.ylabel('density')
+    plt.title('Distribution of all Epistasis values')
+    meanhat = np.mean(All_Eps_hat)
+    meanobs = np.mean(All_Eps_obs)
+
+    
+    plt.axvline(meanhat, color='salmon', linestyle='--', label='Mean Model')
+    plt.axvline(meanobs, color='darkcyan', linestyle='--', label='Mean Observed') 
+    plt.legend()
+    plt.show
+
+        
+        
+        
+
+
+        
+        
+
+
+
+
+
+
+
+
+
+
+    
+    
+   
+
+
+        
+     
+
+
+
+         
+
+
+
+
+#%%
  # elif len(mutants) == 3:
     #     mut1 = mutants[0]
     #     mut2 = mutants[1]

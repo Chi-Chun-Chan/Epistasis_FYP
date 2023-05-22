@@ -629,7 +629,7 @@ def multivariate_dis(df):
         ranges[j] = temp
         j = j+1
     #generate cov matrix
-    cov_matrix = np.cov(WT_matrix, bias = True)
+    cov_matrix = np.cov(matrix, bias = True)
     #generate multivariate normal distribution
     multi_norm_dis = multivariate_normal(
                         mean = mean_list,

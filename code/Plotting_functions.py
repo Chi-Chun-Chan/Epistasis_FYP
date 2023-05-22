@@ -953,7 +953,7 @@ def Plot_SM_Hill_Results(iter):
     #obtain wildtype disribution
     path = '../data/smc_hill/pars_final.out'
     WT_converged_params = Out_to_DF_hill(path, model_hill, mut_name = '', all = False)
-    param_dist = multivariate_dis(WT_converged_params, 13)
+    param_dist = multivariate_dis(WT_converged_params)
     
     #Regulator only 
     mutant_range:slice=slice(10,11) #len(SM_names)-10

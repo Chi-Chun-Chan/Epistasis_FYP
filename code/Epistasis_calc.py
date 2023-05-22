@@ -1,7 +1,9 @@
+#%%
 from data_wrangling import meta_dict
 from Models import *
 from Epistasis_calc_functions import *
-
+from Hill_Model_Fit import *
+#%%
 #This file is used to calculate epistasis for all double and triple mutants from observed and expected flourcsence at low, medium and high inducer concs
 
 #first, get the parameters calculated in model_fit.py
@@ -69,3 +71,10 @@ if output_pval == check_pval:
     print("True")
 else:
     print("False")
+
+#%%
+#get biggest eps file you will ever see
+Generate_Epshat_all()
+
+
+#%%
