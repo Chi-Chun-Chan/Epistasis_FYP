@@ -216,6 +216,53 @@ class model_hill:
         Output*= (MF_o*F_o)
 
         return Sensor,Regulator,Output_half, Output
+    @staticmethod
+    def modelWT(params_list,I_conc): #reformulated so that output half and output are same parameters with F_o to scale
+        correct_length=13 
+        #S is subscript for parameters corresponding to Sensor
+        #R is subscript for parameters corresponding to Regulator
+        #H is subscript for parameters corresponding to the half network I->S -| O
+        #O is subscript for parameters corresponding to Output
+   
+        
+
+        if len(params_list)!=correct_length:
+            print("params_list of incorrect length should be of length ",correct_length)
+            return None
+        #sensor
+        A_s=10**params_list[0]
+        B_s=10**params_list[1]
+        C_s=10**params_list[2]
+        N_s=params_list[3]
+        #regulator
+        A_r=10**params_list[4]
+        B_r=10**params_list[5]
+        C_r=10**params_list[6]
+        N_r=params_list[7]
+        #out_half
+        
+        #output
+        A_o=10**params_list[8]
+        B_o=10**params_list[9]
+        C_o=10**params_list[10]
+        N_o=params_list[11]
+        
+        #free
+        F_o=params_list[12]
+        
+        Sensor = A_s+B_s*np.power(C_s*I_conc,N_s)
+        Sensor /= 1+np.power(C_s*I_conc,N_s)
+
+        Regulator = B_r/(1+np.power(C_r*Sensor,N_r))
+        Regulator += A_r
+
+        Output_half = B_o/(1+np.power(C_o*Sensor,N_o))
+        Output_half += A_o
+
+        Output = A_o + B_o/(1+np.power(C_o*(Sensor+Regulator),N_o))
+        Output*=F_o
+        #I wonder why we describe different repression strengths for repression by LacI_regulator and LacI_sensor?
+        return Sensor,Regulator,Output_half, Output
 
 
 #%%

@@ -74,7 +74,14 @@ else:
 
 #%%
 #get biggest eps file you will ever see
-Generate_Epshat_all()
+from Hill_Model_Fit import *
+Generate_Epshat_all(prior_mutant = None)
 
 
 #%%
+from data_wrangling import *
+DM_names = DM_stripes['genotype'].tolist()
+DM_names = list(set(DM_names[3:]))
+mut = ['R10_S10']
+DM_names.index(mut)
+# %%
