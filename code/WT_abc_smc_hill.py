@@ -61,15 +61,73 @@ parlist: List[Dict[str, Union[str, float]]] = [{
     'name': 'log_C_o',
     'lower_limit': -3.0,
     'upper_limit': 0.0
+},{ 
+    'name': 'log_C_k',
+    'lower_limit': -1.0,
+    'upper_limit': 0.3 #range of 0.1 and 2 
 }, {
     'name': 'N_o',
     'lower_limit': 1.0,
     'upper_limit': 4.0
 }, {
-    'name': 'F_o',
-    'lower_limit': 0.0,
-    'upper_limit': 2.0
+    'name': 'log_F_o',
+    'lower_limit': -2.0,
+    'upper_limit': 1.0
 }] 
+
+# parlist: List[Dict[str, Union[str, float]]] = [{
+#     'name': 'log_A_s',
+#     'lower_limit': 2.0,
+#     'upper_limit': 4.0
+# }, {
+#     'name': 'log_B_s',
+#     'lower_limit': 2.0,
+#     'upper_limit': 5.0
+# }, {
+#     'name': 'log_C_s',
+#     'lower_limit': 2.0,
+#     'upper_limit': 4.0
+# }, {
+#     'name': 'N_s',
+#     'lower_limit': 1.0,
+#     'upper_limit': 4.0
+# }, {
+#     'name': 'log_A_r',
+#     'lower_limit': 2.0,
+#     'upper_limit': 4.0
+# }, {
+#     'name': 'log_B_r',
+#     'lower_limit': 2.0,
+#     'upper_limit': 4.0
+# }, {
+#     'name': 'log_C_r',
+#     'lower_limit': -4.0,
+#     'upper_limit': -1.0
+# }, {
+#     'name': 'N_r',
+#     'lower_limit': 1.0,
+#     'upper_limit': 4.0
+# }, {
+#     'name': 'log_A_o',
+#     'lower_limit': 2.0,
+#     'upper_limit': 4.0
+# }, {
+#     'name': 'log_B_o',
+#     'lower_limit': 4.0,
+#     'upper_limit': 8.0
+# }, {
+#     'name': 'log_C_o',
+#     'lower_limit': -3.0,
+#     'upper_limit': 0.0
+# }, {
+#     'name': 'N_o',
+#     'lower_limit': 1.0,
+#     'upper_limit': 4.0
+# }, {
+#     'name': 'log_F_o',
+#     'lower_limit': -2.0,
+#     'upper_limit': 1.0
+# }] 
 
 #Takes a parameter list and inputs it into the score wrapper which converts 
 #log values and fixes certain parameters if needed
@@ -79,8 +137,8 @@ def calculate_distance(pars: List[float]) -> float:
 
 def score_wrapper(log_A_s: float, log_B_s: float, log_C_s: float,
                      N_s: float, log_A_r: float, log_B_r: float, log_C_r: float,
-                     N_r: float, log_A_o: float, log_B_o: float, log_C_o: float,
-                     N_o: float, F_o:float) -> float:
+                     N_r: float, log_A_o: float, log_B_o: float, log_C_o: float, log_C_k:float,
+                     N_o: float, log_F_o:float) -> float:
     """Intakes a list of parameters and generates a dictionary to be score"""
     #pylint: disable=too-many-arguments
 
@@ -97,19 +155,20 @@ def score_wrapper(log_A_s: float, log_B_s: float, log_C_s: float,
         "A_o":10**log_A_o,
         "B_o":10**log_B_o,
         "C_o":10**log_C_o,
+        "C_k":10**log_C_k,
         "N_o":N_o,
-        "F_o":F_o
+        "F_o":10**log_F_o
     }
 
     par_list = list(par_dict.values()) 
     data = meta_dict['WT'] #fitting against wildtype data
     
     # Call the actual scoring function
-    return RSS_Score(param_list= par_list, model_type=model_hill, data_=data)
+    return RSS_Score(param_list= par_list, model_type=model_hill, data_=data, model_specs='new_WT')
 
 ###############################################################
 
-def make_output_folder(name: str = "smc") -> None:
+def make_output_folder(name: str = "smc_WT_new") -> None:
     """Make sure the output folder exists, else make it."""
     if not os.path.isdir('../data/'+ name):
         os.mkdir('../data/'+ name)
@@ -295,9 +354,9 @@ def generate_parametrisations(prev_parametrisations=None,
 
 
 def sequential_abc(initial_dist: float = 1000.0,
-                   final_dist: float = 0.2,
+                   final_dist: float = 0.1,
                    n_pars: int = 1000,
-                   prior_label: Optional[int] = 16): #None for restart
+                   prior_label: Optional[int] = None): #None for restart
     """ The main function. The sequence of acceptance thresholds starts
     with initial_dist and keeps on reducing until a final threshold
     final_dist is reached.
@@ -319,9 +378,9 @@ def sequential_abc(initial_dist: float = 1000.0,
     else:
         # A file with the label is used to load the posterior.
         # Always use a numerical label, never 'final'
-        pars = np.loadtxt(f'../data/smc/pars_{prior_label}.out')
-        weights = np.loadtxt(f'../data/smc/weights_{prior_label}.out')
-        accepted_distances = np.loadtxt(f'../data/smc/distances_{prior_label}.out')
+        pars = np.loadtxt(f'../data/smc_WT_new/pars_{prior_label}.out')
+        weights = np.loadtxt(f'../data/smc_WT_new/weights_{prior_label}.out')
+        accepted_distances = np.loadtxt(f'../data/smc_WT_new/distances_{prior_label}.out')
         distance = np.min(accepted_distances) + \
          0.95*(np.median(accepted_distances) - np.min(accepted_distances))  # type: ignore
         iteration = prior_label
@@ -352,9 +411,9 @@ def sequential_abc(initial_dist: float = 1000.0,
             label = str(iteration)
 
         # Write results of the current step to HDD
-        np.savetxt(f'../data/smc/pars_{label}.out', pars)  # type: ignore
-        np.savetxt(f'../data/smc/weights_{label}.out', weights)  # type: ignore
-        np.savetxt(f'../data/smc/distances_{label}.out', accepted_distances)
+        np.savetxt(f'../data/smc_WT_new/pars_{label}.out', pars)  # type: ignore
+        np.savetxt(f'../data/smc_WT_new/weights_{label}.out', weights)  # type: ignore
+        np.savetxt(f'../data/smc_WT_new/distances_{label}.out', accepted_distances)
 
         # Check for convergence, defined as the proposed distance being
         # smaller than the desired final distance.

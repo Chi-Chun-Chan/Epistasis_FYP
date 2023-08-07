@@ -48,6 +48,8 @@ def RSS_Score(param_list:list,model_type,data_, model_specs:str):
         Model = model_type(params_list=[1]*13, I_conc=meta_dict["WT"].S)
         if model_specs == 'model_muts':
                 func = Model.model_muts
+        elif model_specs == 'new_WT':
+              func = Model.model_new_WT
         else:
                 func = Model.model
         rss_converged=min_func_all(data=data_,params_list=param_list,model_type=func)

@@ -158,11 +158,13 @@ def Visualise_SM_par_dis(mut_name, iter, s:bool):
     return Paired_Density_plot_mut(df2, name = mut_name, save = s)
 
 #put a mutant name and the final or last SMC step
-# mut = 'Output2'
-# num = 'final'
-# fig, scores, set_list = Visualise_SM_fit(mut_name=mut, iter = num, plot_num = 50, save = True)
+mut = 'Sensor2'
+num = 'final'
+fig, scores, set_list = Visualise_SM_fit(mut_name=mut, iter = num, plot_num = 50, save = True)
 # Visualise_SM_par_dis(mut_name= mut, iter = num, saves = True)
 
+#%%
+'''Visualise WT fittings'''
 def Visualise_WT_fits(plot_num):
     hill=model_hill(params_list=[1]*13,I_conc=meta_dict["WT"].S)
     path = '../data/smc_hill/pars_final.out'
@@ -214,10 +216,9 @@ def Visualise_WT_fits(plot_num):
         Regulator.plot(data_.S, Regulator_est_array,alpha = 0.1, c = 'dimgrey')
         Sensor.plot(data_.S, Sensor_est_array, alpha = 0.1, c = 'darkorange')
     return
-
 #%%
 
-'''Examining the WT distribution of parameter sets between mutants'''
+'''Examining the WT distribution of parameter sets between single mutants'''
 def get_combo_WT_df_DM(mutants:list):
     mutant1 = mutants[0]
     mutant2 = mutants[1]
@@ -304,7 +305,7 @@ def get_combo_WT_df_TM(mutants:list):
 #Paired_Density_plot_compare(Combined_WT,n,huw = 'Genotype', save=False)
 # %%
 '''Code to create a viable set of combined single mutant parameters'''
-
+#Pairwise
 def get_combo_params(mutants:list):
     '''Pairwise mutant combination of parameters'''
     #Step1: obtain mu of WT, mut1, mut2 and Covariance matrix of combined wildtypes
@@ -450,7 +451,7 @@ def get_combo_params(mutants:list):
     M2_cond_params = M2_multi_dis.rvs(size = 100, random_state=rndint+ timeseed)
 
     return WT_sample, M1_cond_params, M2_cond_params
-
+#Centralised mean pairwise
 def get_combo_params_0(mutants:list):
     '''Combine modifiers with centralised means'''
     #Step1: obtain mu of WT, mut1, mut2 and Covariance matrix of combined wildtypes
@@ -596,7 +597,7 @@ def get_combo_params_0(mutants:list):
     M2_cond_params = M2_multi_dis.rvs(size = 100, random_state=rndint+ timeseed)
 
     return WT_sample, M1_cond_params, M2_cond_params
-
+#Triplet
 def get_combo_params_TM(mutants:list):
     '''Triplet combination of modifiers'''
     #Step1: obtain mu of WT, mut1, mut2 and Covariance matrix of combined wildtypes
@@ -792,7 +793,7 @@ def get_combo_params_TM(mutants:list):
     M3_cond_params = M3_multi_dis.rvs(size = 100, random_state=rndint+ timeseed)
 
     return WT_sample, M1_cond_params, M2_cond_params, M3_cond_params
-
+#Centralised mean triplet
 def get_combo_params_TM_0(mutants:list):
 
     #Step1: obtain mu of WT, mut1, mut2 and Covariance matrix of combined wildtypes
@@ -1817,9 +1818,10 @@ def obtain_pred_fluo_0(mutants:list, size = 100):
 '''Obtain the mode of a distribution of parameters'''
 def Kde_mode(df):
     '''Finds the mode from a kde of low medium high data'''
-    low = df['low'].tolist()
-    med = df['medium'].tolist()
-    high = df['high'].tolist()
+    colnames = df.columns.values 
+    low = df[colnames[1]].to_list() #assumes that first column is genotype
+    med = df[colnames[2]].to_list()
+    high = df[colnames[3]].to_list()
 
     low_kde = gaussian_kde(low)
     medium_kde = gaussian_kde(med)
@@ -1844,6 +1846,8 @@ def Kde_mode(df):
     high_mode = x[mode_index]
 
     return low_mode, med_mode, high_mode
+
+#%%
 '''Obtain all epistasis hat values for our model'''
 from data_wrangling import *
 df_DM = meta_dict['DM']
@@ -1911,6 +1915,8 @@ def Generate_Eps_hat_0(mutant_list):
         
         return Eps(df,Glog_mean), Glog_mean
 
+
+#Calculate epistasis hat for low medium and high inducer conc
 def Generate_Epshat_all_DM(prior_mutant:None):
     '''Create large dataframe of all Epistasis at low, medium and high inducer concs'''
     DM_names = DM_stripes['genotype'].tolist()
@@ -2461,12 +2467,13 @@ def Eps_hist(pair:bool, save:bool):
 #Combined epistasis of all combined mutants.
 def Eps_hist_all(save:bool):
     '''Takes a list of mutants to look at the distribution of epistasis values, compares to observed distribution'''
-    
+    #Change to TM_names, df2 if triplet.
+
     DM_names = DM_stripes['genotype'].tolist()
     DM_names = list(set(DM_names[3:]))
     DM_names.sort()
     path1 = '../results/Pairwise_Mode_Eps.csv'
-    path0 = '../results/Pairwise_Mode_Eps_0.csv'
+    path0 = '../results/Pairwise_Mode_Eps_0.csv' #centralised mean=0
     TM_names = TM_stripes['genotype'].tolist()
     TM_names = list(set(TM_names[3:]))
     TM_names.sort()
@@ -2474,31 +2481,13 @@ def Eps_hist_all(save:bool):
     
     
     df1 = pd.read_csv(path1)
-    df0 = pd.read_csv(path0)
+    df0 = pd.read_csv(path0) #centralised mean = 0
     df2 = pd.read_csv(path2)
 
     All_Eps_hat = []
     All_Eps_obs = []
     All_Eps_hat_0 = []
 
-
-    # mutant_range:slice=slice(0,len(DM_names))
-    # for genotypes in DM_names[mutant_range]:
-    #     #Get all Eps values in observed data
-        
-    #     subdf = df1[df1['Genotype'] == genotypes]
-    #     All_Eps_obs.append(subdf['obs_low'].iloc[0])
-    #     All_Eps_obs.append(subdf['obs_medium'].iloc[0])
-    #     All_Eps_obs.append(subdf['obs_high'].iloc[0])
-    
-
-    #     #Get all Eps
-
-    #     subdf = df1[df1['Genotype'] == genotypes]
-    #     All_Eps_hat.append(subdf['low'].iloc[0])
-    #     All_Eps_hat.append(subdf['medium'].iloc[0])
-    #     All_Eps_hat.append(subdf['high'].iloc[0])
-    
     mutant_range:slice=slice(0,len(DM_names))
     for genotypes in DM_names[mutant_range]:
         #Get all Eps values in observed data
@@ -2509,24 +2498,25 @@ def Eps_hist_all(save:bool):
         All_Eps_obs.append(subdf['obs_high'].iloc[0])
     
 
-        # #Get all Eps
+        #Get all Eps
         subdf = df1[df1['Genotype'] == genotypes]
         All_Eps_hat.append(subdf['low'].iloc[0])
         All_Eps_hat.append(subdf['medium'].iloc[0])
         All_Eps_hat.append(subdf['high'].iloc[0])
 
-        subdf = df0[df0['Genotype'] == genotypes]
-        All_Eps_hat_0.append(subdf['low'].iloc[0])
-        All_Eps_hat_0.append(subdf['medium'].iloc[0])
-        All_Eps_hat_0.append(subdf['high'].iloc[0])
+        #Visualising mean=0 distribution
+        # subdf = df0[df0['Genotype'] == genotypes]
+        # All_Eps_hat_0.append(subdf['low'].iloc[0])
+        # All_Eps_hat_0.append(subdf['medium'].iloc[0])
+        # All_Eps_hat_0.append(subdf['high'].iloc[0])
 
 
     fig = plt.figure()
 
     plt.hist(All_Eps_hat, edgecolor = 'salmon',label = 'Model', bins='auto', linewidth=1, density=True, fill = False, histtype="stepfilled")
     plt.grid(visible=False)
-    plt.hist(All_Eps_hat_0, edgecolor = 'indigo',label = 'Model_0', bins='auto', linewidth=1, density=True, fill = False, histtype="stepfilled")
-    plt.grid(visible=False)
+    # plt.hist(All_Eps_hat_0, edgecolor = 'indigo',label = 'Model_0', bins='auto', linewidth=1, density=True, fill = False, histtype="stepfilled")
+    # plt.grid(visible=False) # centralised mean = 0
     plt.hist(All_Eps_obs, edgecolor = 'darkcyan', label = 'Observed',bins='auto', linewidth=1, density=True, fill = False, histtype="stepfilled")
     plt.grid(visible=False)
     plt.xlabel('Epistasis')
@@ -2542,7 +2532,7 @@ def Eps_hist_all(save:bool):
     
     plt.axvline(meanhat, color='salmon', linestyle='--', label='Mean Model')
     plt.axvline(meanobs, color='darkcyan', linestyle='--', label='Mean Observed') 
-    plt.axvline(meanhat0, color='indigo', linestyle='--', label='Mean Model0')
+    #plt.axvline(meanhat0, color='indigo', linestyle='--', label='Mean Model0')
     plt.legend()
     txt = f'Mean and Stdev of model epistasis: \n'
     txt+=str(meanhat)

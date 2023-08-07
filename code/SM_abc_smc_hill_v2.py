@@ -16,9 +16,11 @@ from scipy.stats import multivariate_normal, norm, uniform  # type: ignore
 
 from RSS_Scoring import *
 #Insert wildtype parameter distribution information.
-path = '../data/smc_hill/pars_final.out'
+path = '../data/smc_WT_new/pars_final.out'
 WT_converged_params = Out_to_DF_hill(path, model_hill, mut_name= "", all = False)
 param_dist = multivariate_dis(WT_converged_params)
+
+
 #Define list of parameters
 parlistS: List[Dict[str, Union[str, float]]] = [{
     'name': 'log_MA_s',
@@ -30,8 +32,8 @@ parlistS: List[Dict[str, Union[str, float]]] = [{
     'upper_limit': 2.0
 }, {
     'name': 'log_MC_s',
-    'lower_limit': -1.0,
-    'upper_limit': 1.0
+    'lower_limit': -2.0,
+    'upper_limit': 2.0
 }, {
     'name': 'log_MN_s',
     'lower_limit': -1.0,
@@ -40,20 +42,20 @@ parlistS: List[Dict[str, Union[str, float]]] = [{
 
 parlistR: List[Dict[str, Union[str, float]]] = [{
     'name': 'log_MA_r',
-    'lower_limit': -2.0,
-    'upper_limit': 2.0
+    'lower_limit': -3.0,
+    'upper_limit': 3.0
 }, {
     'name': 'log_MB_r',
-    'lower_limit': -2.0,
-    'upper_limit': 2.0
+    'lower_limit': -3.0,
+    'upper_limit': 3.0
 }, {
     'name': 'log_MC_r',
-    'lower_limit': -1.0,
-    'upper_limit': 1.0
+    'lower_limit': -3.0,
+    'upper_limit': 3.0
 }, {
     'name': 'log_MN_r',
-    'lower_limit': -1.0,
-    'upper_limit': 1.0
+    'lower_limit': -3.0,
+    'upper_limit': 3.0
 }] 
 
 parlistO: List[Dict[str, Union[str, float]]] = [{
@@ -66,12 +68,12 @@ parlistO: List[Dict[str, Union[str, float]]] = [{
     'upper_limit':2.0
 }, {
     'name': 'log_MC_o',
-    'lower_limit':-1.0,
-    'upper_limit':1.0
+    'lower_limit':-2.0,
+    'upper_limit':2.0
 }, {
     'name': 'log_MN_o',
-    'lower_limit':-1.0,
-    'upper_limit':1.0
+    'lower_limit':-2.0,
+    'upper_limit':2.0
 }] 
 
 # {
@@ -118,13 +120,13 @@ def score_wrapper_S(log_MA_s: float, log_MB_s: float, log_MC_s: float,
     "A_o":10**random_params[8],
     "B_o":10**random_params[9],
     "C_o":10**random_params[10],
-    "N_o":random_params[11],
-    "F_o":random_params[12],
+    "C_k":10**random_params[11],
+    "N_o":random_params[12],
+    "F_o":10**random_params[13],
     "MA_o":10**0.0,
     "MB_o":10**0.0,
     "MC_o":10**0.0,
     "MN_o":10**0.0,
-    "MF_o":10**0.0,
         }
 
     par_list = list(par_dict.values()) 
@@ -132,8 +134,7 @@ def score_wrapper_S(log_MA_s: float, log_MB_s: float, log_MC_s: float,
     # Call the actual scoring function
     return par_list
 
-def score_wrapper_R(log_MA_r: float, log_MB_r: float, log_MC_r: float,
-                     log_MN_r: float) -> float:
+def score_wrapper_R(log_MA_r: float, log_MB_r: float, log_MC_r: float, log_MN_r: float) -> float:
     """Wrapper function two-inducer model, to be called by the optimiser."""
     rndint = np.random.randint(low=0, high=1e7)
     
@@ -162,13 +163,14 @@ def score_wrapper_R(log_MA_r: float, log_MB_r: float, log_MC_r: float,
     "A_o":10**random_params[8],
     "B_o":10**random_params[9],
     "C_o":10**random_params[10],
-    "N_o":random_params[11],
-    "F_o":random_params[12],
+    # "C_k":10**random_params[11],
+    "C_k":10**0,
+    "N_o":random_params[12],
+    "F_o":10**random_params[13],
     "MA_o":10**0.0,
     "MB_o":10**0.0,
     "MC_o":10**0.0,
     "MN_o":10**0.0,
-    "MF_o":10**0.0,
         }
 
     par_list = list(par_dict.values()) 
@@ -176,8 +178,7 @@ def score_wrapper_R(log_MA_r: float, log_MB_r: float, log_MC_r: float,
     # Call the actual scoring function
     return par_list
 
-def score_wrapper_O(log_MA_o: float, log_MB_o: float, log_MC_o: float,
-                     log_MN_o: float) -> float:
+def score_wrapper_O(log_MA_o: float, log_MB_o: float, log_MC_o: float, log_MN_o: float) -> float:
     """Wrapper function two-inducer model, to be called by the optimiser."""
     rndint = np.random.randint(low=0, high=1e7)
     
@@ -206,13 +207,13 @@ def score_wrapper_O(log_MA_o: float, log_MB_o: float, log_MC_o: float,
     "A_o":10**random_params[8],
     "B_o":10**random_params[9],
     "C_o":10**random_params[10],
-    "N_o":random_params[11],
-    "F_o":random_params[12],
+    "C_k":10**random_params[11],
+    "N_o":random_params[12],
+    "F_o":10**random_params[13],
     "MA_o":10**log_MA_o,
     "MB_o":10**log_MB_o,
     "MC_o":10**log_MC_o,
     "MN_o":10**log_MN_o,
-    "MF_o":10**0.0
     }
 
     par_list = list(par_dict.values()) 
@@ -222,7 +223,7 @@ def score_wrapper_O(log_MA_o: float, log_MB_o: float, log_MC_o: float,
 
 ###############################################################
 
-def make_output_folder(name: str = "smc") -> None:
+def make_output_folder(name: str = "smc_hill_new") -> None:
     """Make sure the output folder exists, else make it."""
     if not os.path.isdir('../data/'+ name):
         os.mkdir('../data/'+ name)
@@ -557,9 +558,9 @@ def generate_parametrisations(name, data, prev_parametrisations=None,
 
 def sequential_abc(name_, data_,
                    initial_dist: float = 1000.0,
-                   final_dist: float = 0.10,
+                   final_dist: float = 0.1,
                    n_pars: int = 1000,
-                   prior_label: Optional[int] = None,): #Takes name of mutant and data of mutants
+                   prior_label: Optional[int] = 14,): #Takes name of mutant and data of mutants
     """ The main function. The sequence of acceptance thresholds starts
     with initial_dist and keeps on reducing until a final threshold
     final_dist is reached.
@@ -567,8 +568,8 @@ def sequential_abc(name_, data_,
     distribution in case further exploration with a lower epsilon is needed."""
     
     #initialisation
-    if not os.path.isdir('../data/smc_SM_hill/' + name_ + '_smc'):
-        os.mkdir('../data/smc_SM_hill/' + name_ + '_smc')
+    if not os.path.isdir('../data/smc_hill_new/' + name_ + '_smc'):
+        os.mkdir('../data/smc_hill_new/' + name_ + '_smc')
      #make new function
     distance = initial_dist
     not_converged = True
@@ -583,9 +584,9 @@ def sequential_abc(name_, data_,
     else:
         # A file with the label is used to load the posterior.
         # Always use a numerical label, never 'final'
-        pars = np.loadtxt(f'../data/smc_SM_hill/{name_}_smc/pars_{prior_label}.out')
-        weights = np.loadtxt(f'../data/smc_SM_hill/{name_}_smc/weights_{prior_label}.out')
-        accepted_distances = np.loadtxt(f'../data/smc_SM_hill/{name_}_smc/distances_{prior_label}.out')
+        pars = np.loadtxt(f'../data/smc_hill_new/{name_}_smc/pars_{prior_label}.out')
+        weights = np.loadtxt(f'../data/smc_hill_new/{name_}_smc/weights_{prior_label}.out')
+        accepted_distances = np.loadtxt(f'../data/smc_hill_new/{name_}_smc/distances_{prior_label}.out')
         distance = np.min(accepted_distances) + \
          0.95*(np.median(accepted_distances) - np.min(accepted_distances))  # type: ignore
         iteration = prior_label
@@ -616,10 +617,10 @@ def sequential_abc(name_, data_,
             label = str(iteration)
 
         # Write results of the current step to HDD
-        np.savetxt(f'../data/smc_SM_hill/{name_}_smc/pars_{label}.out', pars)  # type: ignore
-        np.savetxt(f'../data/smc_SM_hill/{name_}_smc/weights_{label}.out', weights)  # type: ignore
-        np.savetxt(f'../data/smc_SM_hill/{name_}_smc/distances_{label}.out', accepted_distances)
-        np.savetxt(f'../data/smc_SM_hill/{name_}_smc/all_pars_{label}.out', all_params)
+        np.savetxt(f'../data/smc_hill_new/{name_}_smc/pars_{label}.out', pars)  # type: ignore
+        np.savetxt(f'../data/smc_hill_new/{name_}_smc/weights_{label}.out', weights)  # type: ignore
+        np.savetxt(f'../data/smc_hill_new/{name_}_smc/distances_{label}.out', accepted_distances)
+        np.savetxt(f'../data/smc_hill_new/{name_}_smc/all_pars_{label}.out', all_params)
         # Check for convergence, defined as the proposed distance being
         # smaller than the desired final distance.
         if proposed_dist < final_dist:
@@ -646,7 +647,7 @@ def sequential_abc(name_, data_,
 #mutant_range:slice=slice(0,len(SM_names)) 
 
 #Regulator only
-mutant_range:slice=slice(0,len(SM_names)-10)
+mutant_range:slice=slice(11,len(SM_names)-19)
 
 for i in SM_names[mutant_range]: 
     SM_mutant_of_interest=i
@@ -655,7 +656,7 @@ for i in SM_names[mutant_range]:
           
     SM_df = get_data_SM(SM_mutant_of_interest)
     
-    data__ = SM_df
+
 
     if SM_mutant_of_interest.startswith("Sensor"):
             sequential_abc(name_=SM_mutant_of_interest, data_=SM_df)
@@ -672,4 +673,4 @@ for i in SM_names[mutant_range]:
 
 # if __name__ == "__main__":
 #     SM_sequential_abc()
-# %%
+                                                                        # %%
