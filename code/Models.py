@@ -266,6 +266,67 @@ class model_hill:
         Output*= F_o
 
         return Sensor,Regulator,Output_half, Output
+    
+    @staticmethod    
+    def model_muts2(params_list,I_conc): #reformulated for 
+        correct_length=26 
+        #S is subscript for parameters corresponding to Sensor
+        #R is subscript for parameters corresponding to Regulator
+        #H is subscript for parameters corresponding to the half network I->S -| O
+        #O is subscript for parameters corresponding to Output
+        
+
+        if len(params_list)!=correct_length:
+            print("params_list of incorrect length should be of length ",correct_length)
+            return None
+        #sensor
+        A_s=params_list[0]
+        B_s=params_list[1]
+        C_s=params_list[2]
+        N_s=params_list[3]
+        
+        #regulator
+        A_r=params_list[4]
+        B_r=params_list[5]
+        C_r=params_list[6]
+        N_r=params_list[7]
+    
+        #out_half
+    
+        #output
+        A_o=params_list[8]
+        B_o=params_list[9]
+        C_o=params_list[10]
+        C_k=params_list[11]
+        N_o=params_list[12]
+        F_o=params_list[13]
+
+        MA_s=params_list[14]
+        MB_s=params_list[15]
+        MC_s=params_list[16]
+        MN_s=params_list[17]
+        MA_r=params_list[18]
+        MB_r=params_list[19]
+        MC_r=params_list[20]
+        MN_r=params_list[21]
+        MA_o=params_list[22]
+        MB_o=params_list[23]
+        MC_o=params_list[24]
+        MN_o=params_list[25]
+        
+        Sensor = (A_s*MA_s)+(B_s*MB_s)*np.power((C_s*MC_s)*I_conc,(N_s*MN_s))
+        Sensor /= (1+np.power((C_s*MC_s)*I_conc,(N_s*MN_s)))
+
+        Regulator = (MB_r*B_r)/(1+np.power((MC_r*C_r)*Sensor,(MN_r*N_r)))
+        Regulator += (MA_r*A_r)
+
+        Output_half = (MB_o*B_o)/(1+np.power((MC_o*C_o)*Sensor,(MN_o*N_o)))
+        Output_half += (MA_o*A_o)
+
+        Output = (MA_o*A_o) + (MB_o*B_o)/(1+np.power(((MC_o*C_o)*((C_k*Sensor) + Regulator)),(MN_o*N_o)))
+        Output*= F_o
+
+        return Sensor,Regulator,Output_half, Output
 
     def model_single_muts(params_list:list,I_conc,mutant): #reformulated for 
         correct_length=26 

@@ -25,48 +25,48 @@ from Plotting_functions import *
 #%%
 '''Visualising Hill WT parameter distributions'''
 
-# path = '../data/smc_hill/pars_final.out'
+path = '../data/smc_WT_new/pars_final.out'
 
-# WT_converged_params = Out_to_DF_hill(path, model_hill.model, '', all = False)
+WT_converged_params = Out_to_DF_hill(path, model_hill.model, '', all = False)
 
-# param_dist = multivariate_dis(WT_converged_params)
+param_dist = multivariate_dis(WT_converged_params)
 
-# WT = 'Wildtype'
-# Paired_Density_plot(WT_converged_params, name = WT, save=True)
+WT = 'Wildtype'
+Paired_Density_plot(WT_converged_params, name = WT, save=False)
 
 #%%
 '''Visualising whether the random selection of params from multi-v guassian is correct'''
-# start_time_per_mutant=time.time()
-# np.random.seed(0)  
-# rndint = np.random.randint(low=0, high=1e7)
+start_time_per_mutant=time.time()
+np.random.seed(0)  
+rndint = np.random.randint(low=0, high=1e7)
     
-# timeseed = time.time_ns() % 2**16
-# np.random.seed(rndint+timeseed)
-# seed(rndint+timeseed)
+timeseed = time.time_ns() % 2**16
+np.random.seed(rndint+timeseed)
+seed(rndint+timeseed)
 
-# WT_converged_params = Out_to_DF_hill(path, model_hill.model, '', all = False) #WT SMC_ABC results
+WT_converged_params = Out_to_DF_hill(path, model_hill.model, '', all = False) #WT SMC_ABC results
 
-# param_dist = multivariate_dis(WT_converged_params) #convert to multivariable distribution
+param_dist = multivariate_dis(WT_converged_params) #convert to multivariable distribution
 
-# random_params = param_dist.rvs(size=1, random_state=rndint+timeseed) #randomly selects one set of parameters
+random_params = param_dist.rvs(size=1, random_state=rndint+timeseed) #randomly selects one set of parameters
 
-# #test to see if sampling from multi-variate distribution works
-# param1 = []
-# param1 = WT_converged_params['Br'].to_numpy()
+#test to see if sampling from multi-variate distribution works
+param1 = []
+param1 = WT_converged_params['Br'].to_numpy()
 
-# param2 = []
-# param2 = WT_converged_params['Cr'].to_numpy()
+param2 = []
+param2 = WT_converged_params['Cr'].to_numpy()
 
-# param1_gaus = []
-# param2_gaus = []
-# temp = param_dist.rvs(size=100, random_state=rndint+timeseed+200)
+param1_gaus = []
+param2_gaus = []
+temp = param_dist.rvs(size=100, random_state=rndint+timeseed+200)
 
-# for items in temp:
-#     param1_gaus.append(items[5]) #Looks at the 5th and 6th parameters from the param set
-#     param2_gaus.append(items[6]) #Both values were taken from the same random sample
+for items in temp:
+    param1_gaus.append(items[5]) #Looks at the 5th and 6th parameters from the param set
+    param2_gaus.append(items[6]) #Both values were taken from the same random sample
 
-# plt.scatter(param1,param2, c = 'b', label= 'WT param dist') #WT
-# plt.scatter(param1_gaus,param2_gaus, c ='r', label= 'Multi-variate gaus') 
+plt.scatter(param1,param2, c = 'b', label= 'WT param dist') #WT
+plt.scatter(param1_gaus,param2_gaus, c ='r', label= 'Multi-variate gaus') 
 # %%
 '''Plotting functions to visualise Hill modifier params for SM'''
 #Visualising parameter distribution

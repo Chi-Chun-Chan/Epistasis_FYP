@@ -28,17 +28,17 @@ def stst(pars):
     '''
 
 
-    affS = np.power(pars['C_s']*pars['I'],pars['N_s'])
-    Seq = (pars['A_s'] + pars['B_s']*affS)/(1+affS)
+    affS = np.power(pars['Cs']*pars['I'],pars['Ns'])
+    Seq = (pars['As'] + pars['Bs']*affS)/(1+affS)
 
-    affR = np.power(pars['C_r']*Seq,pars['N_r'])
-    Req = pars['A_r'] + pars['B_r']/(1+affR)
+    affR = np.power(pars['Cr']*Seq,pars['Nr'])
+    Req = pars['Ar'] + pars['Br']/(1+affR)
 
-    affO = np.power(pars['C_o']*(Req+Seq),pars['N_o'])
-    Oeq =  (pars['A_o'] + pars['B_o']/(1+affO))*pars['F_o'] #multiply by F_o
+    affO = np.power(pars['Co']*(Req+pars['Ck']*Seq),pars['No'])
+    Oeq =  (pars['Ao'] + pars['Bo']/(1+affO))*pars['Fo'] #multiply by F_o
 
-    affOh = np.power(pars['C_o']*Req,pars['N_o']) #halfoutput is only sensor
-    Oheq = pars['A_o'] + pars['B_o']/(1+affOh)
+    affOh = np.power(pars['Co']*Req,pars['No']) #halfoutput is only sensor
+    Oheq = pars['Ao'] + pars['Bo']/(1+affOh)
 
     return Seq,Req,Oeq,Oheq
 
@@ -53,8 +53,8 @@ def CompareEpistasis():
 
 ### 2) Epistasis from full model. Use parameters from WT and single fittings to predict duplets and then calculate epistasis
 
-    depth = 10000 # MAX = 10000, number of parameter sets to use per file
-    folder = '../../results/Combined_mutant_params/Pairwise_params/'
+    depth = 1000 # MAX = 250000, number of parameter sets to use per file
+    folder = '../../results/New_params/Pairwise_params/'
     epi_model = pd.DataFrame()
 
     letters = r'[a-zA-Z]'
@@ -70,6 +70,7 @@ def CompareEpistasis():
         # Calulate WT fluorescence
         data_WT = pd.read_csv(folder+file)
         data_WT = data_WT.head(depth) # if depth<10000 then only a subset of parameters is loaded
+        data_WT = 10**data_WT #convert from log10
         data_WT['I'] = 0.0002 # WT peak position
         WT_fluo = stst(data_WT)[2]
 
@@ -80,21 +81,21 @@ def CompareEpistasis():
 
         # Mutant 1 and duplet part
         for par in basepars: # for each parameter of a node
-            data_mut1[par+'_'+m1_str] = data_mut1[par+'_'+m1_str]*data_mut1['M'+par+'_'+m1_str]
-            data_duplet[par+'_'+m1_str] = data_duplet[par+'_'+m1_str]*data_duplet['M'+par+'_'+m1_str]
-        if m1_str == 'o': # in the case that 1 of the mutatns is the outout, apply fluorescence correction. Note that this should not affect epistasis
-            data_mut1['F_o'] = data_mut1['F_o']*data_mut1['MF_o']
-            data_duplet['F_o'] = data_duplet['F_o']*data_duplet['MF_o']
+            data_mut1[par+m1_str] = data_mut1[par+m1_str]*data_mut1['M'+par+m1_str]
+            data_duplet[par+m1_str] = data_duplet[par+m1_str]*data_duplet['M'+par+m1_str]
+        # if m1_str == 'o': # in the case that 1 of the mutatns is the outout, apply fluorescence correction. Note that this should not affect epistasis
+        #     data_mut1['Fo'] = data_mut1['F_o']
+        #     data_duplet['Fo'] = data_duplet['F_o']
 
         m1_fluo = stst(data_mut1)[2]
 
         # Mutant 2 and duplet part
         for par in basepars:
-            data_mut2[par+'_'+m2_str] = data_mut2[par+'_'+m2_str]*data_mut2['M'+par+'_'+m2_str]
-            data_duplet[par+'_'+m2_str] = data_duplet[par+'_'+m2_str]*data_duplet['M'+par+'_'+m2_str]
-        if m2_str == 'o':
-            data_mut2['F_o'] = data_mut2['F_o']*data_mut2['MF_o']
-            data_duplet['F_o'] = data_duplet['F_o']*data_duplet['MF_o']
+            data_mut2[par+m2_str] = data_mut2[par+m2_str]*data_mut2['M'+par+m2_str]
+            data_duplet[par+m2_str] = data_duplet[par+m2_str]*data_duplet['M'+par+m2_str]
+        # if m2_str == 'o':
+        #     data_mut2['F_o'] = data_mut2['F_o']*data_mut2['MF_o']
+        #     data_duplet['F_o'] = data_duplet['F_o']*data_duplet['MF_o']
 
         m2_fluo = stst(data_mut2)[2] 
 

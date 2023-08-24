@@ -36,26 +36,26 @@ parlistS: List[Dict[str, Union[str, float]]] = [{
     'upper_limit': 2.0
 }, {
     'name': 'log_MN_s',
-    'lower_limit': -1.0,
-    'upper_limit': 1.0
+    'lower_limit': -2.0,
+    'upper_limit': 2.0
 }] 
 
 parlistR: List[Dict[str, Union[str, float]]] = [{
     'name': 'log_MA_r',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'lower_limit': -2.0,
+    'upper_limit': 2.0
 }, {
     'name': 'log_MB_r',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'lower_limit': -2.0,
+    'upper_limit': 2.0
 }, {
     'name': 'log_MC_r',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'lower_limit': -2.0,
+    'upper_limit': 2.0
 }, {
     'name': 'log_MN_r',
-    'lower_limit': -3.0,
-    'upper_limit': 3.0
+    'lower_limit': -2.0,
+    'upper_limit': 2.0
 }] 
 
 parlistO: List[Dict[str, Union[str, float]]] = [{
@@ -98,7 +98,18 @@ def score_wrapper_S(log_MA_s: float, log_MB_s: float, log_MC_s: float,
     timeseed = time.time_ns() % 2**16
     np.random.seed(rndint+timeseed)
     seed(rndint+timeseed)
-    random_params = param_dist.rvs(size=1, random_state=rndint+timeseed)
+    #in case negative parameter values are selected from multivariable distribution.
+    neg = True 
+    c = 0
+    while neg == True:
+        random_params = param_dist.rvs(size=1, random_state=rndint+timeseed)
+        for rand in random_params:
+            if 10**rand < 0:
+                c += 1
+        if c == 0:
+            neg = False
+        else:
+            c = 0 
             
     par_dict = {
     "A_s":10**random_params[0],
@@ -107,8 +118,8 @@ def score_wrapper_S(log_MA_s: float, log_MB_s: float, log_MC_s: float,
     "N_s":random_params[3],
     "MA_s":10**log_MA_s,
     "MB_s":10**log_MB_s,
-    "MC_s":10**log_MC_s, #might be fucking up sensor
-    "MN_s":10**log_MN_s, #changed to log
+    "MC_s":10**log_MC_s, 
+    "MN_s":10**log_MN_s, 
     "A_r":10**random_params[4],
     "B_r":10**random_params[5],
     "C_r":10**random_params[6],
@@ -116,7 +127,7 @@ def score_wrapper_S(log_MA_s: float, log_MB_s: float, log_MC_s: float,
     "MA_r":10**0.0,
     "MB_r":10**0.0,
     "MC_r":10**0.0,
-    "MN_r":1.0,
+    "MN_r":10**0.0,
     "A_o":10**random_params[8],
     "B_o":10**random_params[9],
     "C_o":10**random_params[10],
@@ -141,8 +152,19 @@ def score_wrapper_R(log_MA_r: float, log_MB_r: float, log_MC_r: float, log_MN_r:
     timeseed = time.time_ns() % 2**16
     np.random.seed(rndint+timeseed)
     seed(rndint+timeseed)
-    random_params = param_dist.rvs(size=1, random_state=rndint+timeseed)
-            
+    #in case negative parameter values are selected from multivariable distribution.
+    neg = True 
+    c = 0
+    while neg == True:
+        random_params = param_dist.rvs(size=1, random_state=rndint+timeseed)
+        for rand in random_params:
+            if 10**rand <0:
+                c += 1
+        if c == 0:
+            neg = False
+        else:
+            c = 0 
+                
     par_dict = {
     "A_s":10**random_params[0],
     "B_s":10**random_params[1],
@@ -163,8 +185,7 @@ def score_wrapper_R(log_MA_r: float, log_MB_r: float, log_MC_r: float, log_MN_r:
     "A_o":10**random_params[8],
     "B_o":10**random_params[9],
     "C_o":10**random_params[10],
-    # "C_k":10**random_params[11],
-    "C_k":10**0,
+    "C_k":10**random_params[11],
     "N_o":random_params[12],
     "F_o":10**random_params[13],
     "MA_o":10**0.0,
@@ -185,7 +206,18 @@ def score_wrapper_O(log_MA_o: float, log_MB_o: float, log_MC_o: float, log_MN_o:
     timeseed = time.time_ns() % 2**16
     np.random.seed(rndint+timeseed)
     seed(rndint+timeseed)
-    random_params = param_dist.rvs(size=1, random_state=rndint+timeseed)
+    #in case negative parameter values are selected from multivariable distribution.
+    neg = True 
+    c = 0
+    while neg == True:
+        random_params = param_dist.rvs(size=1, random_state=rndint+timeseed)
+        for rand in random_params:
+            if 10**rand <0:
+                c += 1
+        if c == 0:
+            neg = False
+        else:
+            c = 0 
             
     par_dict = {
     "A_s":10**random_params[0],
@@ -558,9 +590,9 @@ def generate_parametrisations(name, data, prev_parametrisations=None,
 
 def sequential_abc(name_, data_,
                    initial_dist: float = 1000.0,
-                   final_dist: float = 0.1,
+                   final_dist: float = 0.05,
                    n_pars: int = 1000,
-                   prior_label: Optional[int] = 14,): #Takes name of mutant and data of mutants
+                   prior_label: Optional[int] = 5): #Takes name of mutant and data of mutants
     """ The main function. The sequence of acceptance thresholds starts
     with initial_dist and keeps on reducing until a final threshold
     final_dist is reached.
@@ -647,7 +679,7 @@ def sequential_abc(name_, data_,
 #mutant_range:slice=slice(0,len(SM_names)) 
 
 #Regulator only
-mutant_range:slice=slice(11,len(SM_names)-19)
+mutant_range:slice=slice(11,len(SM_names)-18)
 
 for i in SM_names[mutant_range]: 
     SM_mutant_of_interest=i
@@ -670,6 +702,7 @@ for i in SM_names[mutant_range]:
     print("\n time elapsed for this mutant \n",)
     print("--- %s seconds ---" % (time.time() - start_time_per_mutant))
     
+#reg2,reg3,reg4
 
 # if __name__ == "__main__":
 #     SM_sequential_abc()

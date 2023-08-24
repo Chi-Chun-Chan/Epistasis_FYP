@@ -579,22 +579,20 @@ def Out_to_DF_hill(filepath, model_type, mut_name, all:bool):
     if all == False:
 
         if model_type == model_hill.model:
-            dataframe.rename(columns={0:'As',1:'Bs',2:'Cs',3:'Ns',4:'Ar',5:'Br',6:'Cr',7:'Nr', 8:'Ao',9:'Bo',10:'Co',11:'No',12:'Fo'}, inplace=True)
+            dataframe.rename(columns={0:'As',1:'Bs',2:'Cs',3:'Ns',4:'Ar',5:'Br',6:'Cr',7:'Nr', 8:'Ao',9:'Bo',10:'Co',11:'Ck',12:'No',13:'Fo'}, inplace=True)
         elif model_type == model_hill.model_muts:
                 if mut_name.startswith("Sensor"):
                     dataframe.rename(columns={0:'MAs',1:'MBs',2:'MCs',3:'MNs'}, inplace=True)
                 if mut_name.startswith("Regulator"):
                     dataframe.rename(columns={0:'MAr',1:'MBr',2:'MCr',3:'MNr'}, inplace=True)
                 if mut_name.startswith("Output"):
-                    dataframe.rename(columns={0:'MAo',1:'MBo',2:'MCo',3:'MNo',4:'MFo'}, inplace=True)
+                    dataframe.rename(columns={0:'MAo',1:'MBo',2:'MCo',3:'MNo'}, inplace=True)
 
     else:
         if model_type == model_hill.model:
-            dataframe.rename(columns={0:'As',1:'Bs',2:'Cs',3:'Ns',4:'Ar',5:'Br',6:'Cr',7:'Nr', 8:'Ao',9:'Bo',10:'Co',11:'No',12:'Fo'}, inplace=True)
+            dataframe.rename(columns={0:'As',1:'Bs',2:'Cs',3:'Ns',4:'Ar',5:'Br',6:'Cr',7:'Nr', 8:'Ao',9:'Bo',10:'Co',11:'Ck',12:'No',13:'Fo'}, inplace=True)
         elif model_type == model_hill.model_muts:
-            dataframe.rename(columns={0:'As',1:'Bs',2:'Cs',3:'Ns',4:'MAs',5:'MBs',6:'MCs',7:'MNs',8:'Ar',9:'Br',10:'Cr',11:'Nr',12:'MAr',13:'MBr',14:'MCr',15:'MNr', 16:'Ao',17:'Bo',18:'Co',19:'No',20:'Fo', 21:'MAo',22:'MBo',23:'MCo',24:'MNo',25:'MFo'}, inplace=True)
-    
-    
+            dataframe.rename(columns={0:'As',1:'Bs',2:'Cs',3:'Ns',4:'MAs',5:'MBs',6:'MCs',7:'MNs',8:'Ar',9:'Br',10:'Cr',11:'Nr',12:'MAr',13:'MBr',14:'MCr',15:'MNr', 16:'Ao',17:'Bo',18:'Co',19: 'Ck', 20:'No',21:'Fo', 22:'MAo',23:'MBo',24:'MCo',25:'MNo'}, inplace=True)
     return dataframe
 
 
